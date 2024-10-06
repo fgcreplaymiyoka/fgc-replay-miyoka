@@ -1,0 +1,9 @@
+.venv
+download
+last_images
+frames
+logs
+working
+**/__pycache__
+scene-subtitle.vtt
+frame_dataset.pkl

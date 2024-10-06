@@ -1,0 +1,140 @@
+######################################################################
+# Miyoka Config file
+#
+# Do NOT share it with someone else!
+######################################################################
+
+game:
+  name: <game.name>
+  window:
+    name: <game.window.name>
+  extra:
+    <game.extra>
+# Google Cloud Platform (GCP)
+gcp:
+  # ID of your GCP project
+  # See https://support.google.com/googleapi/answer/7014113?hl=en how to locate your project ID.
+  project_id: <google_cloud_platform.project_id>
+  # Region of the GCP project https://cloud.google.com/compute/docs/regions-zones. Choose the closest one to your location.
+  # e.g. `asia-northeast1` if you live in Tokyo.
+  region: <google_cloud_platform.region>
+  storages:
+    replays:
+      # Name of the bucket of the replay video storage (i.e. "<bucket_name>/<replay-id>/<round-id>.mp4")
+      bucket_name: miyoka_replays
+      # If true, skip the download. This is useful to debug the analyzer locally.
+      skip_download: false
+      # Dir path when the video is downloaded.
+      download_dir: download
+    frames:
+      # (Optional) Name of the bucket of the split frames (i.e. "<bucket_name>/<replay-id>/<round-id>/<frame-range>.zip")
+      bucket_name: miyoka_frames
+      # Number of workers for upload.
+      workers: 2
+  bigquery:
+    dataset_name: miyoka_ds
+    replay_dataset:
+      table_name: replays
+    frame_dataset:
+      table_name: frames
+  service_accounts:
+    # Service account for accessing the resources (except the replay storage) in the replay viewer.
+    # In most of the cases, you can just use the default compute service account that is automatically created by GCP.
+    # See https://cloud.google.com/iam/docs/service-accounts-list-edit for finding your SA account email.
+    # 
+    # Miyoka binds "serviceAccountTokenCreator" role to this account
+    # so that the account can create an access token to the "signed_url_generator" SA.
+    replay_viewer:
+      # e.g. 123456789-compute@developer.gserviceaccount.com
+      email: <service_accounts.replay_viewer.email>
+    # Service account for generating signed URLs to the videos in the replay storage,
+    # so that the replay viewer can stream the video without downloading it.
+    # See https://cloud.google.com/iam/docs/service-accounts-list-edit for finding your SA account email.
+    #
+    # The replay viewer runs on Cloud Run with the default compute service account by default,
+    # however, it can't create the signed URLs so we need to create an additional SA.
+    signed_url_generator:
+      # e.g. miyoka@my-project.iam.gserviceaccount.com
+      email: <service_accounts.signed_url_generator.email>
+  user_account:
+    # (Optional) User account email e.g. miyoka@gmail.com
+    # Miyoka binds "serviceAccountTokenCreator" role to this account
+    # so that the account can create an access token to the service account for signed url.
+    #
+    # You set this value when you debug the replay viewer locally.
+    email:
+  artifact_registry:
+    # (Optional) Repository name of the Artifact registry.
+    # - If you want to build a docker image for Replay Analyzer when `analyzer_operation_mode=schedule`, you can use Artifact registry.
+    # - If you want to build a docker image for Replay Viewer instead of using the official images from Docker hub, you can use Artifact registry.
+    repo:
+  cloud_run_service:
+    replay_viewer:
+      # Name of the Cloud Run Service for Replay viewer.
+      name: miyoka-viewer
+      # Image of the Cloud Run Service for Replay viewer.
+      # In general, you should use the official image published in the Docker Hub.
+      # Optionally, you can specify the image in artifact registry. In this case, you must setup `artifact_registry` section.
+      image: <service_accounts.cloud_run_service.image>
+  cloud_run_job:
+    replay_analyzer:
+      # (Optional) Name of the Cloud Run Job for Replay Analyzer.
+      # When `analyzer_operation_mode=schedule`, you create an analyze job on Cloud Run.
+      name:
+replay_uploader:
+  # Your user code of the game. Replay Uploader crawls your replays in the game UI with this ID.
+  user_code: <replay_uploader.user_code>
+  # "schedule" ... Schedule analyze job in Cloud Run. You must deploy analyzer in Cloud Run Job beforehand.
+  # "inline" ... Execute analyzer in the replay uploader.
+  # "skip" ... Skip analyzer execution.
+  analyzer_operation_mode: inline
+  # How many replays to be recorded per run.
+  max_replays_per_run:
+  # Stop recording after the number of duplicate replays.
+  stop_after_duplicate_replays: 3
+  # If true, skip recording the replay. This is useful to extract only replay summaries.
+  skip_recording: false
+replay_analyzer:
+  # Batch size of the frame splitter
+  batch_size: 1000
+  # Export dir of the split frames
+  export_dir: frames
+  # If true, the frames will be deleted per batch.
+  clear_per_batch: true
+  # Skip splitting process to run the analyzer on the existing frames.
+  # This is convenient for debugging analyzer withtout splitting again.
+  skip_split: false
+  # Start frame of the round analyzer. It's used for debugging specific frame range.
+  start_frame_at: 1
+  # Stop frame of the round analyzer.  It's used for debugging specific frame range.
+  stop_frame_at: 0
+  # If true, an error is ignored. This might result in an incomplete dataset.
+  ignore_error: false
+  # If true, a collapsed input is logged. e.g. ["5 action", "5 action"] => { "count": 2, "input": "5 action" }
+  log_collapsed_inputs: false
+  # If true, verify the collapsed input count matches the displayed count.
+  # It's mainly used for checking the accuracy of template matching.
+  verify_inputs_count: false
+  # If true, upload the split frames. Miyoka currently is not using the split frames, so you can skip by default.
+  upload_split_frames: false
+  # If true, upload the last processed images. Useful for debugging.
+  upload_last_images: true
+  # (Optional) Replay ID to be analyzed. This is required when `analyzer_operation_mode=schedule`.
+  replay_id: ${REPLAY_ANALYZER_REPLAY_ID}
+replay_viewer:
+  # Password to access to the Replay viewer.
+  # You should set a strong pasword to keep your replays private.
+  # Optionally, you can set "None" to make the replay viewer publically accessible.
+  # This is <required> field.
+  password:
+  # If true, additional information is visibile on the viewer for debugging purpose.
+  debug_mode: false
+  # Player name of your game account
+  player_name:
+log:
+  name: miyoka
+  dir_path: logs
+  file_name: miyoka.log
+  standard_output: true
+  file_output: true
+  clear_everytime: true
