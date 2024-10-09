@@ -4,7 +4,7 @@ FGC Replay Miyoka (Miyoka) is a fighting game replay server for the fighting gam
 You can host your Miyoka server to watch your replays from anywhere even if you're away from a console or PC.
 It's open source and free.
 
-Most of the fighting games allow you to watch replays from the game UI on a console or PC/Steam, but don't allow you to watch it from your mobile phones.
+Most of the fighting games allow you to watch replays in the game UI on a console or PC/Steam, but don't allow you to watch it from your mobile phones.
 This interface is a bit counter-intuitive because:
 
 - When you're playing a fighting game on a console or PC, you'd want to play something interactive like online matches or training mode. You are reluctant to watch replays because it's boring.
