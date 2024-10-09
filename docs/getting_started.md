@@ -26,19 +26,22 @@ Community contributions are welcome to support more fighting games.
 1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project).
 1. [Install `gcloud` CLI](https://cloud.google.com/sdk/docs/install).
 
-Tips:
+<details>
+<summary>Tips:</summary>
 
 - You can find your project in GCP console. See [this](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects) for more info.
 - See [GCP doc](gcp.md) for more details.
 
+</details>
+
 ### Setup Miyoka
 
-1. [Download Miyoka](https://github.com/miyoka/miyoka/releases).
-1. Open "Windows Powershell". Execute the following command:
+1. [Download Miyoka](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases).
+1. Right-click on the `miyoka/setup.ps1` file and select "Run with PowerShell".
+    Alternatively, you can open Windows Powershell and execute the following command:
     ```
     powershell.exe -executionpolicy bypass -file .\setup.ps1
     ```
-1. Right-click on the `miyoka/setup.ps1` file and select "Run with PowerShell".
 
 <details>
 <summary>Explanation:</summary>

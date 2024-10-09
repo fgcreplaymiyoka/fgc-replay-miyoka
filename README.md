@@ -46,10 +46,11 @@ In Miyoka, you can walk through different matches and rounds, quickly and produc
 
 By default, you are the only one who can access to your Miyoka server,
 so that your replays are kept in private.
-You have to set your original password when you're setting up a new Miyoka server.
+You have to set your unique password when you're setting up a new Miyoka server.
 
-If you want to share your replays with a friend or a coach, you can tell them your password, so that they gain an access to your replays.
-You should change your password after it's no longer necessary, so that your replays will be back to private again.
+If you want to share your replays with a friend or a coach, you can download and share a replay with them or tell them the replay ID.
+In addition, you can tell them your password for the short term access.
+In this case, you should change your password after it's no longer necessary, so that your replays will be back to private again.
 
 ## Getting Started
 
