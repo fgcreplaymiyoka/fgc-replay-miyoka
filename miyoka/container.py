@@ -1,4 +1,5 @@
 from dependency_injector import containers, providers
+import os
 from miyoka.libs.logger import setup_logger
 from miyoka.libs.storages import (
     ReplayStorage,
@@ -27,9 +28,10 @@ def dynamic_import(game, klass_path, *args, **kwargs):
     klass = getattr(module, klass_name)
     return klass(*args, **kwargs)
 
+config_path = os.environ.get("MIYOKA_CONFIG_PATH", "./config.yaml")
 
 class Container(containers.DeclarativeContainer):
-    config = providers.Configuration(yaml_files=["./config.yaml"])
+    config = providers.Configuration(yaml_files=[config_path])
 
     logger = providers.Singleton(
         setup_logger,

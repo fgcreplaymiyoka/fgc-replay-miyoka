@@ -46,6 +46,7 @@ Write-Host "Enabling services on your GCP project..."
 # https://developers.google.com/apis-explorer/#p/run/v2/
 gcloud services enable run.googleapis.com
 gcloud services enable vision.googleapis.com
+gcloud services enable secretmanager.googleapis.com
 
 Write-Host "Creating service accounts on GCP..."
 $gcp_replay_viewer_service_account_name = "miyoka-replay-viewer"
@@ -61,6 +62,16 @@ gcloud iam service-accounts create ${gcp_signed_url_service_account_name} `
     --description="Service account for Miyoka Signed URL Generator" `
     --display-name="${gcp_signed_url_service_account_name}"
 
+# This is needed for basic operational resource access in the Cloud Run instance.
+gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
+    --member="serviceAccount:${gcp_replay_viewer_service_account}" `
+    --role="roles/editor"
+
+# This is needed for generating an SA access token from the replay viewer service account.
+gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
+    --member="serviceAccount:${gcp_replay_viewer_service_account}" `
+    --role="roles/iam.serviceAccountTokenCreator"
+
 # This is needed for letting the SA to read the replay video (mp4).
 gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
     --member="serviceAccount:${gcp_signed_url_service_account}" `
@@ -71,12 +82,8 @@ gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
     --member="serviceAccount:${gcp_signed_url_service_account}" `
     --role="roles/iam.serviceAccountTokenCreator"
 
-# This is needed for generating an SA access token from the replay viewer service account.
-gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
-    --member="serviceAccount:${gcp_replay_viewer_service_account}" `
-    --role="roles/iam.serviceAccountTokenCreator"
-
-# TODO: Run Cloud Run deploy with the gcp_replay_viewer_service_account
+(Get-Content ./config.yaml).Replace('<service_accounts.replay_viewer.email>', "$gcp_replay_viewer_service_account") | Set-Content ./config.yaml
+(Get-Content ./config.yaml).Replace('<service_accounts.signed_url_generator.email>', "$gcp_signed_url_service_account") | Set-Content ./config.yaml
 
 Write-Host @"
 ===========================================================================

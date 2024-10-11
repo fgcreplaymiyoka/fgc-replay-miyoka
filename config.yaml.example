@@ -75,7 +75,7 @@ gcp:
       # Image of the Cloud Run Service for Replay viewer.
       # In general, you should use the official image published in the Docker Hub.
       # Optionally, you can specify the image in artifact registry. In this case, you must setup `artifact_registry` section.
-      image: <service_accounts.cloud_run_service.image>
+      image: fgcreplaymiyoka/replay-viewer:latest
   cloud_run_job:
     replay_analyzer:
       # (Optional) Name of the Cloud Run Job for Replay Analyzer.

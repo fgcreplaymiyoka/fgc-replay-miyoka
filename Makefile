@@ -42,7 +42,7 @@ viewer-dev:
 	poetry run streamlit run miyoka/sf6/replay-viewer.py
 
 viewer:
-	poetry run streamlit run miyoka/replay-viewer.py \
+	poetry run streamlit run miyoka/sf6/replay-viewer.py \
 		--server.port=8080 \
 		--server.address=0.0.0.0 \
 		--server.fileWatcherType="none"
