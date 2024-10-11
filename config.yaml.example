@@ -89,7 +89,7 @@ replay_uploader:
   # "skip" ... Skip analyzer execution.
   analyzer_operation_mode: inline
   # How many replays to be recorded per run.
-  max_replays_per_run:
+  max_replays_per_run: 100
   # Stop recording after the number of duplicate replays.
   stop_after_duplicate_replays: 3
   # If true, skip recording the replay. This is useful to extract only replay summaries.

@@ -54,7 +54,7 @@ In this case, you should change your password after it's no longer necessary, so
 
 ## Getting Started
 
-See [Getting Started](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/docs/getting_started.md) doc.
+See [Getting Started](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md) doc.
 
 ## Feedback
 
