@@ -164,90 +164,6 @@ if not replay_viewer_helper.check_password():
     st.stop()
 
 # -------------------------------------------------------------------
-st.subheader("Rank progress", divider=True)
-p1_player_dataset = replay_dataset[
-    replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
-]
-p2_player_dataset = replay_dataset[
-    replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
-]
-p1_player_dataset = p1_player_dataset[
-    ["p1_rank", "p1_lp", "p1_character", "replay_id", "played_at"]
-].rename(columns={"p1_rank": "rank", "p1_lp": "lp", "p1_character": "character"})
-p2_player_dataset = p2_player_dataset[
-    ["p2_rank", "p2_lp", "p2_character", "replay_id", "played_at"]
-].rename(columns={"p2_rank": "rank", "p2_lp": "lp", "p2_character": "character"})
-player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
-player_dataset = player_dataset.sort_values(by="played_at")
-player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
-
-c = (
-    alt.Chart(player_dataset.reset_index())
-    .mark_line()
-    .encode(
-        x={"field": "match", "type": "quantitative"},
-        y={"field": "lp", "type": "quantitative"},
-        tooltip=["lp", "rank", "character", "replay_id", "played_at"],
-        color="character:N",
-    )
-)
-st.altair_chart(c, use_container_width=True)
-
-rank_order = [
-    "master",
-    "diamond5",
-    "diamond4",
-    "diamond3",
-    "diamond2",
-    "diamond1",
-    "platinum5",
-    "platinum4",
-    "platinum3",
-    "platinum2",
-    "platinum1",
-    "gold5",
-    "gold4",
-    "gold3",
-    "gold2",
-    "gold1",
-    "silver5",
-    "silver4",
-    "silver3",
-    "silver2",
-    "silver1",
-    "bronze5",
-    "bronze4",
-    "bronze3",
-    "bronze2",
-    "bronze1",
-    "iron5",
-    "iron4",
-    "iron3",
-    "iron2",
-    "iron1",
-    "rookie",
-    "new",
-]
-
-c = (
-    alt.Chart(player_dataset.reset_index())
-    .mark_line()
-    .encode(
-        x={"field": "match", "type": "quantitative"},
-        y={"field": "rank", "type": "ordinal", "sort": rank_order},
-        tooltip=["lp", "rank", "character", "replay_id", "played_at"],
-        color="character:N",
-    )
-)
-st.altair_chart(c, use_container_width=True)
-
-st.dataframe(player_dataset)
-
-if replay_viewer_helper.debug_mode:
-    "replay_dataset"
-    st.dataframe(replay_dataset)
-
-# -------------------------------------------------------------------
 # st.set_page_config(page_title="Miyoka", page_icon="🕹️")
 st.title("Replay Miyoka")
 
@@ -318,55 +234,99 @@ if right_col.button("Prev replay ⏮️"):
 
 # -------------------------------------------------------------------
 
-st.subheader("Daily result", divider=True)
-# daily_ret = replay_dataset[
-#     replay_dataset["p1_player_name"].str.contains('miyon', case=False, na=False) |
-#         replay_dataset["p2_player_name"].str.contains('miyon', case=False, na=False)
-# ]
-player_win_dataset = replay_dataset[
-    (
-        replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
-        & (replay_dataset["p1_result"] == "wins")
-    )
-    | (
-        replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
-        & (replay_dataset["p2_result"] == "wins")
-    )
+st.subheader("Rank progress", divider=True)
+p1_player_dataset = replay_dataset[
+    replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
-player_lose_dataset = replay_dataset[
-    (
-        replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
-        & (replay_dataset["p1_result"] == "loses")
-    )
-    | (
-        replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
-        & (replay_dataset["p2_result"] == "loses")
-    )
+p2_player_dataset = replay_dataset[
+    replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
 ]
-player_wins_daily = player_win_dataset.groupby(
-    [player_win_dataset["played_at"].dt.date]
-)["replay_id"].count()
-player_loses_daily = player_lose_dataset.groupby(
-    [player_lose_dataset["played_at"].dt.date]
-)["replay_id"].count()
-player_wins_daily = player_wins_daily.rename("wins").to_frame()
-player_loses_daily = player_loses_daily.rename("loses").to_frame()
-# st.dataframe(player_wins_daily)
-# st.dataframe(player_loses_daily)
-player_daily_ret = player_wins_daily.merge(
-    player_loses_daily, how="outer", on="played_at"
+p1_player_dataset = p1_player_dataset[
+    ["p1_rank", "p1_lp", "p1_result", "p1_character", "replay_id", "played_at"]
+].rename(columns={"p1_rank": "rank", "p1_lp": "lp", "p1_result": "result", "p1_character": "character"})
+p2_player_dataset = p2_player_dataset[
+    ["p2_rank", "p2_lp", "p2_result", "p2_character", "replay_id", "played_at"]
+].rename(columns={"p2_rank": "rank", "p2_lp": "lp", "p2_result": "result", "p2_character": "character"})
+player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
+player_dataset = player_dataset.sort_values(by="played_at")
+player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
+
+c = (
+    alt.Chart(player_dataset)
+    .mark_line()
+    .encode(
+        x={"field": "match", "type": "quantitative"},
+        y={"field": "lp", "type": "quantitative"},
+        tooltip=["lp", "rank", "character", "replay_id", "played_at"],
+        color="character:N",
+    )
 )
-st.bar_chart(player_daily_ret, x_label="play date", y_label="count")
-# st.bar_chart(player_loses_daily)
-# daily_ret = daily_ret.rename_axis("date").rename("count")
-# st.bar_chart(daily_ret, x_label="play date", y_label="count")
+st.altair_chart(c, use_container_width=True)
 
+rank_order = [
+    "master",
+    "diamond5",
+    "diamond4",
+    "diamond3",
+    "diamond2",
+    "diamond1",
+    "platinum5",
+    "platinum4",
+    "platinum3",
+    "platinum2",
+    "platinum1",
+    "gold5",
+    "gold4",
+    "gold3",
+    "gold2",
+    "gold1",
+    "silver5",
+    "silver4",
+    "silver3",
+    "silver2",
+    "silver1",
+    "bronze5",
+    "bronze4",
+    "bronze3",
+    "bronze2",
+    "bronze1",
+    "iron5",
+    "iron4",
+    "iron3",
+    "iron2",
+    "iron1",
+    "rookie",
+    "new",
+]
 
-# chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
+c = (
+    alt.Chart(player_dataset)
+    .mark_line()
+    .encode(
+        x={"field": "match", "type": "quantitative"},
+        y={"field": "rank", "type": "ordinal", "sort": rank_order},
+        tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
+        color="character:N",
+    )
+)
+st.altair_chart(c, use_container_width=True)
 
-# c = alt.Chart(daily_rank).mark_line().encode(x="played_at:T", y="rank:N")
+# -------------------------------------------------------------------
 
-# st.altair_chart(c, use_container_width=True)
+st.subheader("Daily result", divider=True)
+
+c = (
+    alt.Chart(player_dataset)
+    .mark_bar()
+    .encode(
+        x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
+        y={"field": "result", "aggregate": "count"},
+        color={"field": "result"}
+    )
+)
+st.altair_chart(c, use_container_width=True)
+
+# -------------------------------------------------------------------
 
 st.subheader("Match count by character", divider=True)
 
@@ -389,11 +349,11 @@ player_name_char_dataset = player_name_char_dataset[
 character_count_df = player_name_char_dataset.groupby("character").size()
 st.bar_chart(character_count_df, x_label="character", y_label="match count")
 
-# p1_character_count_df = replay_dataset.groupby("p1_character")["replay_id"].nunique()
-# p2_character_count_df = replay_dataset.groupby("p2_character")["replay_id"].nunique()
-# merged_df = (
-#     pd.concat([p1_character_count_df, p2_character_count_df]).groupby(level=0).sum()
-# )
+# -------------------------------------------------------------------
 
-# merged_df = merged_df.rename_axis("character").rename("count")
-# st.bar_chart(merged_df, x_label="character", y_label="replay count")
+if replay_viewer_helper.debug_mode:
+    st.subheader("Debug info", divider=True)
+    "replay_dataset"
+    st.dataframe(replay_dataset)
+    "player_dataset"
+    st.dataframe(player_dataset)
