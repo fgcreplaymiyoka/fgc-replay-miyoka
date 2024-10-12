@@ -77,12 +77,11 @@ video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 st.video(
     video_path,
     start_time=1,
-    autoplay=True,
+    autoplay=False,
     muted=True,
 )
 
 left_col, middle_col, right_col = st.columns(3)
-left_col.dataframe(current_row)
 
 def next_match():
     st.session_state.current_replay_index += 1
@@ -100,10 +99,11 @@ def next_round():
 def prev_round():
     st.session_state.current_round_id -= 1
 
-middle_col.button("Next match", on_click=next_match)
-middle_col.button("Prev match", on_click=prev_match)
-right_col.button("Next round", on_click=next_round)
-right_col.button("Prev round", on_click=prev_round)
+left_col.button("Next match", on_click=next_match)
+left_col.button("Prev match", on_click=prev_match)
+middle_col.button("Next round", on_click=next_round)
+middle_col.button("Prev round", on_click=prev_round)
+right_col.dataframe(current_row)
 
 # -------------------------------------------------------------------
 
