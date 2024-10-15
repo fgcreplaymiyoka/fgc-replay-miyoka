@@ -63,8 +63,10 @@ if not replay_viewer_helper.check_password():
 # st.set_page_config(page_title="Miyoka", page_icon="🕹️")
 st.title("Replay Miyoka")
 
+last_replay_index = len(replay_dataset) - 1
+
 if "current_replay_index" not in st.session_state:
-    st.session_state.current_replay_index = np.random.randint(len(replay_dataset))
+    st.session_state.current_replay_index = last_replay_index
 
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
@@ -80,6 +82,8 @@ st.video(
     autoplay=False,
     muted=True,
 )
+
+st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 left_col, middle_col, right_col = st.columns(3)
 
@@ -115,74 +119,53 @@ p2_player_dataset = replay_dataset[
     replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
 ]
 p1_player_dataset = p1_player_dataset[
-    ["p1_rank", "p1_lp", "p1_result", "p1_character", "replay_id", "played_at"]
-].rename(columns={"p1_rank": "rank", "p1_lp": "lp", "p1_result": "result", "p1_character": "character"})
+    ["p1_rank", "p1_lp", "p1_mr", "p1_result", "p1_character", "replay_id", "played_at"]
+].rename(columns={"p1_rank": "rank", "p1_lp": "lp", "p1_mr": "mr", "p1_result": "result", "p1_character": "character"})
 p2_player_dataset = p2_player_dataset[
-    ["p2_rank", "p2_lp", "p2_result", "p2_character", "replay_id", "played_at"]
-].rename(columns={"p2_rank": "rank", "p2_lp": "lp", "p2_result": "result", "p2_character": "character"})
+    ["p2_rank", "p2_lp", "p2_mr", "p2_result", "p2_character", "replay_id", "played_at"]
+].rename(columns={"p2_rank": "rank", "p2_lp": "lp", "p2_mr": "mr",  "p2_result": "result", "p2_character": "character"})
 player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
-player_dataset = player_dataset.sort_values(by="played_at")
 player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
+player_dataset = player_dataset.sort_values(by="played_at")
+player_dataset["match"] = [i for i in range(len(player_dataset))]
 
 c = (
     alt.Chart(player_dataset)
-    .mark_line()
+    .mark_bar(clip=True)
     .encode(
-        x={"field": "match", "type": "quantitative"},
+        x=alt.X('match:Q', scale=alt.Scale(domain=[0, last_replay_index])),
         y={"field": "lp", "type": "quantitative"},
-        tooltip=["lp", "rank", "character", "replay_id", "played_at"],
-        color="character:N",
-    )
-)
-st.altair_chart(c, use_container_width=True)
-
-rank_order = [
-    "master",
-    "diamond5",
-    "diamond4",
-    "diamond3",
-    "diamond2",
-    "diamond1",
-    "platinum5",
-    "platinum4",
-    "platinum3",
-    "platinum2",
-    "platinum1",
-    "gold5",
-    "gold4",
-    "gold3",
-    "gold2",
-    "gold1",
-    "silver5",
-    "silver4",
-    "silver3",
-    "silver2",
-    "silver1",
-    "bronze5",
-    "bronze4",
-    "bronze3",
-    "bronze2",
-    "bronze1",
-    "iron5",
-    "iron4",
-    "iron3",
-    "iron2",
-    "iron1",
-    "rookie",
-    "new",
-]
-
-c = (
-    alt.Chart(player_dataset)
-    .mark_line()
-    .encode(
-        x={"field": "match", "type": "quantitative"},
-        y={"field": "rank", "type": "ordinal", "sort": rank_order},
         tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
         color="character:N",
     )
 )
-st.altair_chart(c, use_container_width=True)
+
+thresholds = pd.DataFrame([
+    {"lp": 25000, "rank": "master"},
+    {"lp": 19000, "rank": "diamond"},
+    {"lp": 13000, "rank": "platinum"},
+    {"lp": 9000, "rank": "gold"},
+    {"lp": 5000, "rank": "silver"},
+    {"lp": 3000, "rank": "bronze"},
+    {"lp": 1000, "rank": "iron"},
+    {"lp": 0, "rank": "rookie"},
+])
+
+rules = alt.Chart(thresholds).mark_rule().encode(
+    y='lp:Q',
+    color=alt.value('#224455'),
+    opacity=alt.value(0.3)
+)
+
+text = alt.Chart(thresholds).mark_text(
+    align='left', dx=-190, dy=-5
+).encode(
+    alt.Y('lp:Q'),
+    text='rank',
+    opacity=alt.value(0.3)
+)
+
+st.altair_chart(c + rules + text, use_container_width=True)
 
 # -------------------------------------------------------------------
 
