@@ -68,14 +68,13 @@ class BaseStorageClient:
 class ReplayStorage(BaseStorageClient):
     def __init__(
         self,
-        bucket_name: str,
-        storage_client: Client,
-        logger: Logger,
         download_dir: str,
         skip_download: bool,
         sa_signed_url_generator_email: str,
+        *args,
+        **kwargs,
     ):
-        super().__init__(bucket_name, storage_client, logger)
+        super().__init__(*args, **kwargs)
         self.download_dir = download_dir
         self.skip_download = skip_download
         self.sa_signed_url_generator_email = sa_signed_url_generator_email
@@ -223,15 +222,8 @@ class ReplayStorage(BaseStorageClient):
 
 
 class FrameStorage(BaseStorageClient):
-    def __init__(
-        self,
-        bucket_name: str,
-        storage_client: Client,
-        logger: Logger,
-        workers: int,
-        skip_upload: bool,
-    ):
-        super().__init__(bucket_name, storage_client, logger)
+    def __init__(self, workers: int, skip_upload: bool, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.workers = workers
         self.skip_upload = skip_upload
 
