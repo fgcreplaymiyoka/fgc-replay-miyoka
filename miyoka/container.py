@@ -28,7 +28,9 @@ def dynamic_import(game, klass_path, *args, **kwargs):
     klass = getattr(module, klass_name)
     return klass(*args, **kwargs)
 
+
 config_path = os.environ.get("MIYOKA_CONFIG_PATH", "./config.yaml")
+
 
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration(yaml_files=[config_path])
@@ -58,6 +60,7 @@ class Container(containers.DeclarativeContainer):
         ReplayStorage,
         storage_client=storage_client,
         logger=logger,
+        location=config.gcp.region,
         bucket_name=config.gcp.storages.replays.bucket_name,
         download_dir=config.gcp.storages.replays.download_dir,
         skip_download=config.gcp.storages.replays.skip_download,
@@ -68,6 +71,7 @@ class Container(containers.DeclarativeContainer):
         FrameStorage,
         storage_client=storage_client,
         logger=logger,
+        location=config.gcp.region,
         bucket_name=config.gcp.storages.frames.bucket_name,
         workers=config.gcp.storages.frames.workers,
         skip_upload=config.gcp.storages.frames.skip_upload,

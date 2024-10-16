@@ -185,7 +185,7 @@ class ReplayUploader(ReplayUploaderBase):
                             f"Recorded {self.recorded_replay_count} replays. Stopping."
                         )
                         return
-                    
+
                     if self.duplicate_replay_count >= self.stop_after_duplicate_replays:
                         self.logger.info(
                             f"Already recorded {self.duplicate_replay_count} replays. Stopping."
@@ -252,7 +252,7 @@ class ReplayUploader(ReplayUploaderBase):
                     pydirectinput.press("s")  # Down
                     pydirectinput.press("f")  # Confirm - End replay
 
-                    self.game_window_helper.update_game_window_size() # Reset the game window size after the analyze.
+                    self.game_window_helper.update_game_window_size()  # Reset the game window size after the analyze.
                 case "ErrorCommunication" | "ErrorCommunication2":
                     pydirectinput.press("f")  # OK - Close dialog
                 case "ErrorLogin":
@@ -260,10 +260,7 @@ class ReplayUploader(ReplayUploaderBase):
                     pydirectinput.press("f")  # Click No to the offline mode
                 case "MainFg":
                     pydirectinput.press("a")  # Left
-                case (
-                    "OptionsLanguageDisplayLanguageEnglish"
-                    | "MultiOptions"
-                ):
+                case "OptionsLanguageDisplayLanguageEnglish" | "MultiOptions":
                     pydirectinput.press("ESC")  # Exit
                 case _:
                     pass
@@ -361,7 +358,7 @@ class ReplayUploader(ReplayUploaderBase):
         )
 
         return True
-    
+
     def identify_rank_from_lp(self, lp):
         if lp is None:
             return "new"

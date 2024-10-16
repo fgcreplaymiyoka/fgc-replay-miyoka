@@ -43,8 +43,10 @@ def load_character_list():
 
     return set(p1_list + p2_list)
 
+
 def reset_current_replay_index(*args, **kwargs):
     del st.session_state["current_replay_index"]
+
 
 replay_dataset: pd.DataFrame = load_replay_dataset()
 replay_storage: ReplayStorage = load_replay_storage()
@@ -87,21 +89,26 @@ st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 left_col, middle_col, right_col = st.columns(3)
 
+
 def next_match():
     st.session_state.current_replay_index += 1
     st.session_state.current_replay_index %= len(replay_dataset)
     st.session_state.current_round_id = 1
+
 
 def prev_match():
     st.session_state.current_replay_index -= 1
     st.session_state.current_replay_index %= len(replay_dataset)
     st.session_state.current_round_id = 1
 
+
 def next_round():
     st.session_state.current_round_id += 1
 
+
 def prev_round():
     st.session_state.current_round_id -= 1
+
 
 left_col.button("Next match", on_click=next_match)
 left_col.button("Prev match", on_click=prev_match)
@@ -120,10 +127,26 @@ p2_player_dataset = replay_dataset[
 ]
 p1_player_dataset = p1_player_dataset[
     ["p1_rank", "p1_lp", "p1_mr", "p1_result", "p1_character", "replay_id", "played_at"]
-].rename(columns={"p1_rank": "rank", "p1_lp": "lp", "p1_mr": "mr", "p1_result": "result", "p1_character": "character"})
+].rename(
+    columns={
+        "p1_rank": "rank",
+        "p1_lp": "lp",
+        "p1_mr": "mr",
+        "p1_result": "result",
+        "p1_character": "character",
+    }
+)
 p2_player_dataset = p2_player_dataset[
     ["p2_rank", "p2_lp", "p2_mr", "p2_result", "p2_character", "replay_id", "played_at"]
-].rename(columns={"p2_rank": "rank", "p2_lp": "lp", "p2_mr": "mr",  "p2_result": "result", "p2_character": "character"})
+].rename(
+    columns={
+        "p2_rank": "rank",
+        "p2_lp": "lp",
+        "p2_mr": "mr",
+        "p2_result": "result",
+        "p2_character": "character",
+    }
+)
 player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
 player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
 player_dataset = player_dataset.sort_values(by="played_at")
@@ -133,36 +156,36 @@ c = (
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
-        x=alt.X('match:Q', scale=alt.Scale(domain=[0, last_replay_index])),
+        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index])),
         y={"field": "lp", "type": "quantitative"},
         tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
         color="character:N",
     )
 )
 
-thresholds = pd.DataFrame([
-    {"lp": 25000, "rank": "master"},
-    {"lp": 19000, "rank": "diamond"},
-    {"lp": 13000, "rank": "platinum"},
-    {"lp": 9000, "rank": "gold"},
-    {"lp": 5000, "rank": "silver"},
-    {"lp": 3000, "rank": "bronze"},
-    {"lp": 1000, "rank": "iron"},
-    {"lp": 0, "rank": "rookie"},
-])
-
-rules = alt.Chart(thresholds).mark_rule().encode(
-    y='lp:Q',
-    color=alt.value('#224455'),
-    opacity=alt.value(0.3)
+thresholds = pd.DataFrame(
+    [
+        {"lp": 25000, "rank": "master"},
+        {"lp": 19000, "rank": "diamond"},
+        {"lp": 13000, "rank": "platinum"},
+        {"lp": 9000, "rank": "gold"},
+        {"lp": 5000, "rank": "silver"},
+        {"lp": 3000, "rank": "bronze"},
+        {"lp": 1000, "rank": "iron"},
+        {"lp": 0, "rank": "rookie"},
+    ]
 )
 
-text = alt.Chart(thresholds).mark_text(
-    align='left', dx=-190, dy=-5
-).encode(
-    alt.Y('lp:Q'),
-    text='rank',
-    opacity=alt.value(0.3)
+rules = (
+    alt.Chart(thresholds)
+    .mark_rule()
+    .encode(y="lp:Q", color=alt.value("#224455"), opacity=alt.value(0.3))
+)
+
+text = (
+    alt.Chart(thresholds)
+    .mark_text(align="left", dx=-190, dy=-5)
+    .encode(alt.Y("lp:Q"), text="rank", opacity=alt.value(0.3))
 )
 
 st.altair_chart(c + rules + text, use_container_width=True)
@@ -177,7 +200,7 @@ c = (
     .encode(
         x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
         y={"field": "result", "aggregate": "count"},
-        color={"field": "result"}
+        color={"field": "result"},
     )
 )
 st.altair_chart(c, use_container_width=True)

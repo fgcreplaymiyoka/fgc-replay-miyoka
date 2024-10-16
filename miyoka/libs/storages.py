@@ -24,11 +24,13 @@ class BaseStorageClient:
     def __init__(
         self,
         bucket_name: str,
+        location: str,
         storage_client: storage.Client,
         logger: Logger,
     ):
         self.bucket_name = bucket_name
         self.storage_client = storage_client
+        self.location = location
         self.logger = logger
 
         self.ensure_bucket()
@@ -36,7 +38,9 @@ class BaseStorageClient:
     def ensure_bucket(self):
         try:
             self.storage_client.create_bucket(
-                self.bucket_name, project=self.storage_client.project
+                self.bucket_name,
+                project=self.storage_client.project,
+                location=self.location,
             )
             self.logger.info(f"Bucket {self.bucket_name} created.")
         except Conflict:
@@ -108,7 +112,9 @@ class ReplayStorage(BaseStorageClient):
         videos = [blob for blob in blobs if blob.name.endswith(".mp4")]
 
         if len(videos) < 2:
-            raise ValueError(f"Replay {replay_id} has less than 2 rounds. videos: {videos}")
+            raise ValueError(
+                f"Replay {replay_id} has less than 2 rounds. videos: {videos}"
+            )
 
         return [int(video.name.split("/")[1].replace(".mp4", "")) for video in videos]
 

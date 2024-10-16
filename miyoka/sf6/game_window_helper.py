@@ -325,7 +325,7 @@ class GameWindowHelper(GameWindowHelperBase):
             raise ValueError()
 
         return int(mr_str)
-    
+
     def identify_lp(self, image, player):
         if player == "p1":
             roi = (325, 205, 65, 21)
