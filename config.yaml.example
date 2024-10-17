@@ -87,7 +87,7 @@ replay_uploader:
   # "schedule" ... Schedule analyze job in Cloud Run. You must deploy analyzer in Cloud Run Job beforehand.
   # "inline" ... Execute analyzer in the replay uploader.
   # "skip" ... Skip analyzer execution.
-  analyzer_operation_mode: inline
+  analyzer_operation_mode: skip
   # How many replays to be recorded per run.
   max_replays_per_run: 100
   # Stop recording after the number of duplicate replays.

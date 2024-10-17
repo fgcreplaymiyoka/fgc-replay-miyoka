@@ -321,8 +321,7 @@ class GameWindowHelper(GameWindowHelperBase):
         mr_str = mr_str.replace("MR", "").strip()
 
         if not mr_str.isdecimal():
-            self.logger.error(f"failed to identify mr for {player}. mr_str: {mr_str}")
-            raise ValueError()
+            return None
 
         return int(mr_str)
     

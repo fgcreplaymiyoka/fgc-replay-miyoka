@@ -313,9 +313,9 @@ class ReplayUploader(ReplayUploaderBase):
         else:
             p2_lp = self.game_window_helper.identify_lp(frame, player="p2")
 
-        if p1_rank is None:
+        if not p1_rank:
             p1_rank = self.identify_rank_from_lp(p1_lp)
-        if p2_rank is None:
+        if not p2_rank:
             p2_rank = self.identify_rank_from_lp(p2_lp)
 
         p1_character = self.game_window_helper.identify_character(frame, player="p1")
