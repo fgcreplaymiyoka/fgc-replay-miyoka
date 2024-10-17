@@ -78,12 +78,18 @@ replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
-st.video(
-    video_path,
-    start_time=1,
-    autoplay=False,
-    muted=True,
-)
+html_string = f"""
+<video controls="" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
+"""
+
+st.write(html_string, unsafe_allow_html=True)
+
+# st.video(
+#     video_path,
+#     start_time=1,
+#     autoplay=False,
+#     muted=True,
+# )
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
@@ -184,7 +190,7 @@ rules = (
 
 text = (
     alt.Chart(thresholds)
-    .mark_text(align="left", dx=-190, dy=-5)
+    .mark_text(align="center", dy=-5)
     .encode(alt.Y("lp:Q"), text="rank", opacity=alt.value(0.3))
 )
 
