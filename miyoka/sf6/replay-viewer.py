@@ -43,8 +43,10 @@ def load_character_list():
 
     return set(p1_list + p2_list)
 
+
 def reset_current_replay_index(*args, **kwargs):
     del st.session_state["current_replay_index"]
+
 
 replay_dataset: pd.DataFrame = load_replay_dataset()
 replay_storage: ReplayStorage = load_replay_storage()
@@ -63,8 +65,10 @@ if not replay_viewer_helper.check_password():
 # st.set_page_config(page_title="Miyoka", page_icon="🕹️")
 st.title("Replay Miyoka")
 
+last_replay_index = len(replay_dataset) - 1
+
 if "current_replay_index" not in st.session_state:
-    st.session_state.current_replay_index = np.random.randint(len(replay_dataset))
+    st.session_state.current_replay_index = last_replay_index
 
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
@@ -74,36 +78,49 @@ replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
-st.video(
-    video_path,
-    start_time=1,
-    autoplay=True,
-    muted=True,
-)
+html_string = f"""
+<video controls="" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
+"""
+
+st.write(html_string, unsafe_allow_html=True)
+
+# st.video(
+#     video_path,
+#     start_time=1,
+#     autoplay=False,
+#     muted=True,
+# )
+
+st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 left_col, middle_col, right_col = st.columns(3)
-left_col.dataframe(current_row)
+
 
 def next_match():
     st.session_state.current_replay_index += 1
     st.session_state.current_replay_index %= len(replay_dataset)
     st.session_state.current_round_id = 1
 
+
 def prev_match():
     st.session_state.current_replay_index -= 1
     st.session_state.current_replay_index %= len(replay_dataset)
     st.session_state.current_round_id = 1
 
+
 def next_round():
     st.session_state.current_round_id += 1
+
 
 def prev_round():
     st.session_state.current_round_id -= 1
 
-middle_col.button("Next match", on_click=next_match)
-middle_col.button("Prev match", on_click=prev_match)
-right_col.button("Next round", on_click=next_round)
-right_col.button("Prev round", on_click=prev_round)
+
+left_col.button("Next match", on_click=next_match)
+left_col.button("Prev match", on_click=prev_match)
+middle_col.button("Next round", on_click=next_round)
+middle_col.button("Prev round", on_click=prev_round)
+right_col.dataframe(current_row)
 
 # -------------------------------------------------------------------
 
@@ -115,74 +132,69 @@ p2_player_dataset = replay_dataset[
     replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
 ]
 p1_player_dataset = p1_player_dataset[
-    ["p1_rank", "p1_lp", "p1_result", "p1_character", "replay_id", "played_at"]
-].rename(columns={"p1_rank": "rank", "p1_lp": "lp", "p1_result": "result", "p1_character": "character"})
-p2_player_dataset = p2_player_dataset[
-    ["p2_rank", "p2_lp", "p2_result", "p2_character", "replay_id", "played_at"]
-].rename(columns={"p2_rank": "rank", "p2_lp": "lp", "p2_result": "result", "p2_character": "character"})
-player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
-player_dataset = player_dataset.sort_values(by="played_at")
-player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
-
-c = (
-    alt.Chart(player_dataset)
-    .mark_line()
-    .encode(
-        x={"field": "match", "type": "quantitative"},
-        y={"field": "lp", "type": "quantitative"},
-        tooltip=["lp", "rank", "character", "replay_id", "played_at"],
-        color="character:N",
-    )
+    ["p1_rank", "p1_lp", "p1_mr", "p1_result", "p1_character", "replay_id", "played_at"]
+].rename(
+    columns={
+        "p1_rank": "rank",
+        "p1_lp": "lp",
+        "p1_mr": "mr",
+        "p1_result": "result",
+        "p1_character": "character",
+    }
 )
-st.altair_chart(c, use_container_width=True)
-
-rank_order = [
-    "master",
-    "diamond5",
-    "diamond4",
-    "diamond3",
-    "diamond2",
-    "diamond1",
-    "platinum5",
-    "platinum4",
-    "platinum3",
-    "platinum2",
-    "platinum1",
-    "gold5",
-    "gold4",
-    "gold3",
-    "gold2",
-    "gold1",
-    "silver5",
-    "silver4",
-    "silver3",
-    "silver2",
-    "silver1",
-    "bronze5",
-    "bronze4",
-    "bronze3",
-    "bronze2",
-    "bronze1",
-    "iron5",
-    "iron4",
-    "iron3",
-    "iron2",
-    "iron1",
-    "rookie",
-    "new",
-]
+p2_player_dataset = p2_player_dataset[
+    ["p2_rank", "p2_lp", "p2_mr", "p2_result", "p2_character", "replay_id", "played_at"]
+].rename(
+    columns={
+        "p2_rank": "rank",
+        "p2_lp": "lp",
+        "p2_mr": "mr",
+        "p2_result": "result",
+        "p2_character": "character",
+    }
+)
+player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
+player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
+player_dataset = player_dataset.sort_values(by="played_at")
+player_dataset["match"] = [i for i in range(len(player_dataset))]
 
 c = (
     alt.Chart(player_dataset)
-    .mark_line()
+    .mark_bar(clip=True)
     .encode(
-        x={"field": "match", "type": "quantitative"},
-        y={"field": "rank", "type": "ordinal", "sort": rank_order},
+        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index])),
+        y={"field": "lp", "type": "quantitative"},
         tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
         color="character:N",
     )
 )
-st.altair_chart(c, use_container_width=True)
+
+thresholds = pd.DataFrame(
+    [
+        {"lp": 25000, "rank": "master"},
+        {"lp": 19000, "rank": "diamond"},
+        {"lp": 13000, "rank": "platinum"},
+        {"lp": 9000, "rank": "gold"},
+        {"lp": 5000, "rank": "silver"},
+        {"lp": 3000, "rank": "bronze"},
+        {"lp": 1000, "rank": "iron"},
+        {"lp": 0, "rank": "rookie"},
+    ]
+)
+
+rules = (
+    alt.Chart(thresholds)
+    .mark_rule()
+    .encode(y="lp:Q", color=alt.value("#224455"), opacity=alt.value(0.3))
+)
+
+text = (
+    alt.Chart(thresholds)
+    .mark_text(align="center", dy=-5)
+    .encode(alt.Y("lp:Q"), text="rank", opacity=alt.value(0.3))
+)
+
+st.altair_chart(c + rules + text, use_container_width=True)
 
 # -------------------------------------------------------------------
 
@@ -194,7 +206,7 @@ c = (
     .encode(
         x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
         y={"field": "result", "aggregate": "count"},
-        color={"field": "result"}
+        color={"field": "result"},
     )
 )
 st.altair_chart(c, use_container_width=True)
