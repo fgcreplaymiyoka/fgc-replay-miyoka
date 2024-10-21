@@ -1,15 +1,9 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import datetime
-from typing import Tuple
-from miyoka.libs.scene_store import SceneStore
 from miyoka.libs.storages import ReplayStorage
-from miyoka.libs.bigquery import ReplayDataset, FrameDataset
+from miyoka.libs.bigquery import ReplayDataset
 from miyoka.libs.replay_viewer_helper import ReplayViewerHelper
 from miyoka.container import Container
-from miyoka.sf6.scene_splitter import SceneSplitter
-from miyoka.sf6.scene_vectorizer import SceneVectorizer
 import altair as alt
 
 cache_ttl = 3600  # 1 hour
@@ -17,11 +11,12 @@ cache_ttl = 3600  # 1 hour
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay dataset...")
 def load_replay_dataset():
-    return Container().replay_dataset().get_all_rows(limit=1000)
+    replay_dataset: ReplayDataset = Container().replay_dataset()
+    return replay_dataset.get_all_rows(limit=1000)
 
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay storage...")
-def load_replay_storage():
+def load_replay_storage() -> ReplayStorage:
     return Container().replay_storage()
 
 
@@ -83,13 +78,6 @@ html_string = f"""
 """
 
 st.write(html_string, unsafe_allow_html=True)
-
-# st.video(
-#     video_path,
-#     start_time=1,
-#     autoplay=False,
-#     muted=True,
-# )
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 

@@ -106,3 +106,10 @@ Since fighting games are usually processing p1/p2 frames at 60 FPS, the recordin
 ## Continue
 
 - [Getting started for Street Fighter 6](getting_started/sf6.md)
+
+## Delete Miyoka server
+
+You can delete your Miyoka server by the following steps:
+
+- Delete your GCP project. Follow https://cloud.google.com/resource-manager/docs/creating-managing-projects#shutting_down_projects.
+  This cascadingly delete all of your resources (e.g. replays in storages).

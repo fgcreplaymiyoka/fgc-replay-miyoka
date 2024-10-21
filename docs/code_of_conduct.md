@@ -2,9 +2,6 @@
 
 ## Legal
 
-- https://www.streetfighter.com/6/eula/ps/en/
-- https://www.capcomusa.com/video-policy/
-
 While Miyoka aims to enhance the FGC experience, we emphasize the importance of adhering to legal and ethical standards. Before hosting a Miyoka server, you **MUST** ensure the following:
 
 - Review and comply with the End-User License Agreement (EULA), Terms of Use (ToU), and Terms of Service (ToS) provided by the game publisher or developer. If any Miyoka functionalities are prohibited, you cannot use them.
@@ -12,9 +9,9 @@ While Miyoka aims to enhance the FGC experience, we emphasize the importance of 
 
 We are **NOT** responsible for any damages or legal actions that may arise from your use of Miyoka. We cannot provide legal advice. Use Miyoka at your own risk.
 
-## About us
+## Street Fighter 6
 
-**SF6 Replay Miyoka** (Miyoka) is a community-driven platform dedicated to providing educational insights through replay footage from Street Fighter 6, captured from the Capcom Fighters Network (CFN). Watching replays can help you develop better strategies, but it’s often challenging to identify which replays are most beneficial for you. Miyoka’s key differentiator is its ability to let you scroll *vertically* through replays that showcase similar scenes across different players, enabling you to learn common or trending moves for a particular character.
+**FGC Replay Miyoka** (Miyoka) is a community-driven platform dedicated to providing educational insights through replay footage from Street Fighter 6, captured from the Capcom Fighters Network (CFN).
 
 **Please note that this service is NOT affiliated with Capcom Co., Ltd. (“Capcom”). It is a completely fan-created initiative.**
 
@@ -22,9 +19,8 @@ To clarify the purpose of our website, below is a summary of our practices:
 
 **What We Do:**
 
-- Record, upload, and publicly share Street Fighter 6 replay footage, accompanied by analytical insights for educational purposes. (Reference: [Capcom Video Policy](https://www.capcomusa.com/video-policy/) - I. GUIDELINES)
+- Record and upload Street Fighter 6 replay footage, accompanied by analytical insights for educational purposes. (Reference: [Capcom Video Policy](https://www.capcomusa.com/video-policy/) - I. GUIDELINES)
 - Redact Personally Identifiable Information (PII), such as player names, within the replay footage.
-- Randomly select replays from Master-ranked players.
 
 **What We Do NOT Do:**
 

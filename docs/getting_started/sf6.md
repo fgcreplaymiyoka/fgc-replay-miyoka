@@ -27,7 +27,7 @@ Replay Viewer is the program to upload your replays from a fighting game to your
 1. Right-click on the `miyoka/deploy-replay-viewer.ps1` file and select "Run with PowerShell".
     Alternatively, you can open Windows Powershell and execute the following command:
     ```
-    powershell.exe -executionpolicy bypass -file .\deploy-replay-viewer.ps1
+    powershell.exe -executionpolicy bypass -file .\deploy.ps1
     ```
 
 This command will deploy [the replay-viewer Docker image](https://hub.docker.com/r/fgcreplaymiyoka/replay-viewer/tags)

@@ -208,16 +208,6 @@ class RoundAnalyzer(RoundAnalyzerBase):
         return ("dropped", p1_all_rows_count, p2_all_rows_count)
 
     def _check_game_over(self, frame):
-        # # Submit the tasks to the executor
-        # p1_future = self.executor.submit(
-        #     opencv.identify_replay_input_count, frame, "p1", row=0
-        # )
-        # p2_future = self.executor.submit(
-        #     opencv.identify_replay_input_count, frame, "p2", row=0
-        # )
-        # p1_count = p1_future.result()
-        # p2_count = p2_future.result()
-
         p1_count = self.game_window_helper.identify_replay_input_count(
             frame, "p1", row=0
         )
@@ -229,15 +219,6 @@ class RoundAnalyzer(RoundAnalyzerBase):
 
     def _check_dropped_frames(self, frame):
         max_rows = 3
-
-        # p1_future = self.executor.submit(
-        #     opencv.get_all_rows_count, frame, max_rows, "p1"
-        # )
-        # p2_future = self.executor.submit(
-        #     opencv.get_all_rows_count, frame, max_rows, "p2"
-        # )
-        # p1_all_rows_count = p1_future.result()
-        # p2_all_rows_count = p2_future.result()
 
         p1_all_rows_count = self.game_window_helper.get_all_rows_count(
             frame, max_rows, "p1"
@@ -260,20 +241,6 @@ class RoundAnalyzer(RoundAnalyzerBase):
         return ret
 
     def _identify_replay_input(self, frame):
-        # p1_future = self.executor.submit(
-        #     opencv.identify_replay_input,
-        #     frame,
-        #     "p1",
-        #     self.metadata["p1"]["mode"],
-        # )
-        # p2_future = self.executor.submit(
-        #     opencv.identify_replay_input,
-        #     frame,
-        #     "p2",
-        #     self.metadata["p2"]["mode"],
-        # )
-        # p1_input = p1_future.result()
-        # p2_input = p2_future.result()
         p1_input = self.game_window_helper.identify_replay_input(
             frame, "p1", self.metadata["p1"]["mode"]
         )

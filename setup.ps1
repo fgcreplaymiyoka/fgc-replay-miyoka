@@ -8,7 +8,6 @@ if (-not (Test-Path "./config.yaml")) {
 }
 
 $game_name = Read-Host "Enter your fighting game name.  Supported games: [sf6]"
-$replay_uploader_user_code = Read-Host "Enter your user code of the fighting game"
 
 if ($game_name -eq "sf6") {
     $game_window_name = "Street Fighter 6"
@@ -26,7 +25,6 @@ original_language: $original_language
 (Get-Content ./config.yaml).Replace('<game.window.name>', "$game_window_name") | Set-Content ./config.yaml
 (Get-Content ./config.yaml).Replace('<game.window.width>', "$game_window_width") | Set-Content ./config.yaml
 (Get-Content ./config.yaml).Replace('<game.extra>', "$game_extra") | Set-Content ./config.yaml
-(Get-Content ./config.yaml).Replace('<replay_uploader.user_code>', "$replay_uploader_user_code") | Set-Content ./config.yaml
 
 $google_cloud_platform_project_id = Read-Host "Enter your [GCP project ID](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md)"
 $google_cloud_platform_region = Read-Host "Enter your [GCP region](https://cloud.google.com/compute/docs/regions-zones). Example: asia-northeast1"
@@ -59,6 +57,8 @@ gcloud iam service-accounts create ${gcp_replay_viewer_service_account_name} `
     --description="Service account for Miyoka Replay Viewer" `
     --display-name="${gcp_replay_viewer_service_account_name}"
 
+# Setup service accounts and permission grants for generating signed URLs to directly stream the replay video from the GCS.
+# https://cloud.google.com/storage/docs/access-control/signing-urls-with-helpers#storage-signed-url-object-python
 gcloud iam service-accounts create ${gcp_signed_url_service_account_name} `
     --description="Service account for Miyoka Signed URL Generator" `
     --display-name="${gcp_signed_url_service_account_name}"
