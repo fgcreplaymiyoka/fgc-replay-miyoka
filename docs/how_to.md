@@ -24,3 +24,7 @@ In Miyoka, you can walk through different matches and rounds, quickly and produc
 ## Getting started
 
 See [Getting started](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md).
+
+## Feedback
+
+Create an issue in [the GitHub repository](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka).

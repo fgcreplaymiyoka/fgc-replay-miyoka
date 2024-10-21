@@ -30,6 +30,3 @@ If you want to share your replays with a friend or a coach, you can download and
 
 See [Getting Started](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md) doc.
 
-## Feedback
-
-Create an issue in [the GitHub repository](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka).
