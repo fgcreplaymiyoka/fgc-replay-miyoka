@@ -1,15 +1,12 @@
 import streamlit as st
+
+st.set_page_config(layout="wide", page_title="Miyoka", page_icon="🕹️")
+
 import pandas as pd
-import numpy as np
-import datetime
-from typing import Tuple
-from miyoka.libs.scene_store import SceneStore
 from miyoka.libs.storages import ReplayStorage
-from miyoka.libs.bigquery import ReplayDataset, FrameDataset
+from miyoka.libs.bigquery import ReplayDataset
 from miyoka.libs.replay_viewer_helper import ReplayViewerHelper
 from miyoka.container import Container
-from miyoka.sf6.scene_splitter import SceneSplitter
-from miyoka.sf6.scene_vectorizer import SceneVectorizer
 import altair as alt
 
 cache_ttl = 3600  # 1 hour
@@ -17,11 +14,12 @@ cache_ttl = 3600  # 1 hour
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay dataset...")
 def load_replay_dataset():
-    return Container().replay_dataset().get_all_rows(limit=1000)
+    replay_dataset: ReplayDataset = Container().replay_dataset()
+    return replay_dataset.get_all_rows(limit=1000)
 
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay storage...")
-def load_replay_storage():
+def load_replay_storage() -> ReplayStorage:
     return Container().replay_storage()
 
 
@@ -62,8 +60,7 @@ if not replay_viewer_helper.check_password():
     st.stop()
 
 # -------------------------------------------------------------------
-# st.set_page_config(page_title="Miyoka", page_icon="🕹️")
-st.title("Replay Miyoka")
+st.subheader("Replay", divider=True)
 
 last_replay_index = len(replay_dataset) - 1
 
@@ -82,14 +79,7 @@ html_string = f"""
 <video controls="" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
 """
 
-st.write(html_string, unsafe_allow_html=True)
-
-# st.video(
-#     video_path,
-#     start_time=1,
-#     autoplay=False,
-#     muted=True,
-# )
+st.markdown(html_string, unsafe_allow_html=True)
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
@@ -162,10 +152,10 @@ c = (
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
-        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index])),
+        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
         y={"field": "lp", "type": "quantitative"},
         tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
-        color="character:N",
+        color=alt.Color('character:N', legend=alt.Legend(orient='bottom')),
     )
 )
 
@@ -185,13 +175,13 @@ thresholds = pd.DataFrame(
 rules = (
     alt.Chart(thresholds)
     .mark_rule()
-    .encode(y="lp:Q", color=alt.value("#224455"), opacity=alt.value(0.3))
+    .encode(alt.Y("lp:Q", title=None), color=alt.value("#224455"), opacity=alt.value(0.3))
 )
 
 text = (
     alt.Chart(thresholds)
     .mark_text(align="center", dy=-5)
-    .encode(alt.Y("lp:Q"), text="rank", opacity=alt.value(0.3))
+    .encode(alt.Y("lp:Q", title=None), text="rank", opacity=alt.value(0.3))
 )
 
 st.altair_chart(c + rules + text, use_container_width=True)
@@ -205,8 +195,8 @@ c = (
     .mark_bar()
     .encode(
         x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
-        y={"field": "result", "aggregate": "count"},
-        color={"field": "result"},
+        y=alt.Y("result", aggregate="count", title=None),
+        color=alt.Color('result', legend=alt.Legend(orient='bottom')),
     )
 )
 st.altair_chart(c, use_container_width=True)

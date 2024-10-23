@@ -75,13 +75,10 @@ class GameWindowHelper(GameWindowHelperBase):
                 template = cv.imread(
                     template_dir + "/" + template_file, cv.IMREAD_GRAYSCALE
                 )
-                # name = template_file.replace('.jpeg', '')[0]
                 name = template_file.replace(".jpeg", "").split("_")[0]
                 score, roi = self.detect(img_gray, template)
-                # print(f"name: {name} score: {score} template_file: {template_file}")
 
                 if (score > threthold) and (score > highest):
-                    # print(f"renew highest: {highest}")
                     highest = score
                     detected = name
                     roi = roi
@@ -127,14 +124,10 @@ class GameWindowHelper(GameWindowHelperBase):
         for strength, range in pk_color_ranges.items():
             mask = cv.inRange(icon_image, range[0], range[1])
             n_white_pix = np.sum(mask == 255)
-            # print(f"strength: {strength} n_white_pix: {n_white_pix}")
 
             if (n_white_pix > white_pix_threadhold) and (n_white_pix > highest):
                 highest = n_white_pix
                 detected_strength = strength
-
-        # if not detected_strength and os.environ["RAISE_EXCEPTION"] == "1":
-        #     raise Exception(f"strength was not detected for modern input!!!!!")
 
         if not detected_strength:
             return None
@@ -177,15 +170,11 @@ class GameWindowHelper(GameWindowHelperBase):
         for strength, range in pk_color_ranges.items():
             mask = cv.inRange(icon_image, range[0], range[1])
             n_white_pix = np.sum(mask == 255)
-            # print(f"strength: {strength} n_white_pix: {n_white_pix}")
 
             if (n_white_pix > white_pix_threadhold) and (n_white_pix > highest):
                 highest = n_white_pix
                 detected_strength = strength
 
-        # if not detected_strength and os.environ["RAISE_EXCEPTION"] == "1":
-        #     save_image(image, f"last_images/identify_replay_input_classic/failure.jpeg")
-        #     raise Exception(f"strength was not detected for classic input!!!!!")
         if not detected_strength:
             return None
 
@@ -453,7 +442,6 @@ class GameWindowHelper(GameWindowHelperBase):
                     self.templates_dir("replay_inputs_arrows"),
                     threthold=0.67,
                 )
-                # print(f"player: {player} arrow: {arrow}")
 
                 if not arrow:
                     arrow = "undef"
@@ -511,11 +499,6 @@ class GameWindowHelper(GameWindowHelperBase):
         return detected
 
     def identify_replay_input_count(self, image, player, row=1):
-        # p1_rois = [
-        #     (51, 266, 30, 23), # 66 +- 15 =
-        #     (138-radius, 245-radius, diameter, diameter), # input 1
-        # ]
-
         if row == 0:
             p1_first_digit = (35, 155, 11, 15)  # 66 +- 15 =
             p1_second_digit = (44, 155, 11, 15)  # ?
@@ -535,8 +518,6 @@ class GameWindowHelper(GameWindowHelperBase):
             p1_first_digit = (35, 563, 11, 15)  # 66 +- 15 =
             p1_second_digit = (44, 563, 11, 15)  # ?
 
-        # count_x=1838, count_y=266, count_width=30, count_height=23, # 1854 +- 15 =
-
         if player == "p1":
             first_digit = p1_first_digit
             second_digit = p1_second_digit
@@ -544,17 +525,6 @@ class GameWindowHelper(GameWindowHelperBase):
             first_digit = self.mirror_p2_roi_from(p1_second_digit)
             second_digit = self.mirror_p2_roi_from(p1_first_digit)
 
-        # count_x=51, count_y=266, count_width=30, count_height=23, # 66 +- 15 =
-
-        # digit_width = int(width / 2)
-        # print(f"x: {x} y: {y} width: {width} height: {height} digit_width: {digit_width}")
-        # x_margin = 2
-        # image_10 = image[y:y+height, x:x+digit_width+x_margin]
-        # image_1 = image[y:y+height, x+digit_width-x_margin:x+width]
-        # threthold = 0.75
-
-        # number_10 = _detect_number(image, x, y, digit_width+x_margin, height, threthold)
-        # number_1 = _detect_number(image, x+digit_width, y, digit_width+x_margin, height, threthold)
         number_10 = self._detect_number(image, first_digit, player)
         number_1 = self._detect_number(image, second_digit, player)
 

@@ -16,31 +16,7 @@ Miyoka's goal is to change this flow to:
 - Ater a long day at work, you can play online matches right away because you already finished recapping your replays in daytime.
 - You can effectively use your time.
 
-In addition, Miyoka provides analytical insights on your playing style.
-This helps you to figure out your habits or frequent patterns that might need to be corrected.
-
 In short, Miyoka is an assistant to let you enjoy fighting games more than ever! 🕹️
-
-## Why should I watch my replays?
-
-Watching own replays is an essential part to improve your playing style in the fighting game.
-Imagine you want to be a fasion model 🕺 but don't have a mirror 🪞 to see how you actually look.
-You show up in an audition with a confidence but the interviewers see you differently 😐.
-You need to have time to see yourself _objectively_ with a mirror.
-
-In the fighting game, the same principle applys. You need to have time to see how you actually played online matches, objectively.
-So that you notice what's missing in your playing style.
-
-## How should I watch my replays?
-
-Here are the couple of advises:
-
-- Find one common pattern that you believe it's the reason that you lost in matches. (e.g. "I got combos from jump attacks many times last night!")
-- Make one objective that you believe you can achieve when you're playing the game (e.g. "I will focus on anti-air today.").
-- Asking advises from advanced players or other fighting game forums is also helpful (e.g. "Is there any tips to make anti-air easier?")
-- Don't try to fix everything at once! One step at a time.
-
-In Miyoka, you can walk through different matches and rounds, quickly and productively.
 
 ## Your replays are private
 
@@ -49,13 +25,8 @@ so that your replays are kept in private.
 You have to set your unique password when you're setting up a new Miyoka server.
 
 If you want to share your replays with a friend or a coach, you can download and share a replay with them or tell them the replay ID.
-In addition, you can tell them your password for the short term access.
-In this case, you should change your password after it's no longer necessary, so that your replays will be back to private again.
 
 ## Getting Started
 
 See [Getting Started](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md) doc.
 
-## Feedback
-
-Create an issue in [the GitHub repository](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka).

@@ -26,16 +26,11 @@ class SceneSplitter(SceneSplitterBase):
         self,
         round_rows: DataFrame,
         is_display_clustering: bool = False,
-        # target_character: Optional[str] = None,
     ):
         last_frame_id = round_rows.loc[round_rows["frame_id"].idxmax()]["frame_id"]
         print(f"last_frame_id: {last_frame_id}")
         replay_id = round_rows["replay_id"].values[0]
         round_id = round_rows["round_id"].values[0]
-        # p1_character = round_rows["p1_character"].values[0]
-        # p2_character = round_rows["p2_character"].values[0]
-        # print(f"p1_character: {p1_character} | p2_character: {p2_character}")
-        # p_input = "p1_input" if p1_character == target_character else "p2_input"
 
         for p in ["p1", "p2"]:
             character = round_rows[f"{p}_character"].values[0]

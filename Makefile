@@ -39,7 +39,7 @@ analyze-in-docker:
 		$(IMAGE_NAME_ANALYZER)
 
 viewer-dev:
-	poetry run streamlit run miyoka/sf6/replay-viewer.py
+	poetry run streamlit run miyoka/sf6/replay-viewer.py --server.headless true
 
 viewer:
 	poetry run streamlit run miyoka/sf6/replay-viewer.py \
@@ -89,13 +89,6 @@ create-job:
 		--set-env-vars=LOG_FILE_OUTPUT=false \
 		--set-env-vars=FRAME_SPLITTER_BATCH_SIZE=1000
 
-# update-job:
-# 	gcloud run jobs update $(REPLAY_ANALYZER_JOB) \
-# 		--region $(REGION) \
-# 		--image="$(REGION)-docker.pkg.dev/$(GCP_PROJECT)/$(ARTIFACT_REGISTRY_REPO)/$(IMAGE_NAME_ANALYZER):latest" \
-# 		--set-env-vars=LOG_STANDARD_OUTPUT=1 \
-# 		--set-env-vars=PRINT_PROGRESS=0
-
 delete-job:
 	gcloud run jobs delete $(REPLAY_ANALYZER_JOB) --region $(REGION) --quiet
 
@@ -104,9 +97,6 @@ run-job:
 		--async \
 		--region $(REGION) \
 		--update-env-vars=REPLAY_ANALYZER_REPLAY_ID=$(REPLAY_ANALYZER_REPLAY_ID)
-
-# run-all:
-# 	./run-all.sh
 
 deploy-viewer-service:
 	gcloud run deploy miyoka-viewer \
@@ -122,46 +112,10 @@ delete-viewer-service:
 # Deploy the Docker image
 deploy-analyzer: build-analyzer push-analyzer
 deploy-viewer: build-viewer push-viewer deploy-viewer-service
-
 deploy-and-run: deploy run-job
-# deploy-and-run-all: deploy run-all
 
 lint:
 	poetry run flake8 miyoka
 
 format:
 	poetry run black miyoka
-
-# Setup service accounts and permission grants for generating signed URLs to directly stream the replay video from the GCS.
-# https://cloud.google.com/storage/docs/access-control/signing-urls-with-helpers#storage-signed-url-object-python
-# 
-# The service account's name appears in the email address that is provisioned during creation,
-# in the format SERVICE_ACCOUNT_NAME@PROJECT_ID.iam.gserviceaccount.com.
-# https://cloud.google.com/iam/docs/service-accounts-create
-#
-# You also need to enable IAM Service Account Credentials API
-# gcloud auth print-access-token --impersonate-service-account=sf6-replay-miyoka@sf6-replay-adviser.iam.gserviceaccount.com
-setup-signed-url-generation:
-	gcloud iam service-accounts create ${GCP_SIGNED_URL_SERVICE_ACCOUNT_NAME} \
-		--description="Service account for Miyoka (e.g. generating authenticated URL to GCS blob)" \
-  		--display-name="${GCP_SIGNED_URL_SERVICE_ACCOUNT_NAME}"
-	
-	# This is needed for letting the SA to read the replay video (mp4).
-	gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-		--member="serviceAccount:${GCP_SIGNED_URL_SERVICE_ACCOUNT}" \
-		--role="roles/storage.objectViewer"
-
-	# This is needed for iam.serviceAccounts.signBlob permission to let the SA to generate a signed URL.
-	gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-		--member="serviceAccount:${GCP_SIGNED_URL_SERVICE_ACCOUNT}" \
-		--role="roles/iam.serviceAccountTokenCreator"
-
-	# This is needed for generating an SA access token from the application default credential.
-	gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-		--member="serviceAccount:${GCP_DEFAULT_COMPUTE_SERVICE_ACCOUNT}" \
-		--role="roles/iam.serviceAccountTokenCreator"
-
-	# This is needed for generating an SA access token from the application default credential.
-	gcloud projects add-iam-policy-binding ${GCP_PROJECT} \
-		--member="user:${GCP_USER_ACCOUNT}" \
-		--role="roles/iam.serviceAccountTokenCreator"
