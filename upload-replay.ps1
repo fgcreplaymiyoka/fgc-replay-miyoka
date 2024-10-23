@@ -1,15 +1,5 @@
 Write-Host "Running replay uploader..."
 
-$game_process_name = "Street Fighter 6"
-$is_game_running = Get-Process -Name $game_process_name -ErrorAction SilentlyContinue
-
-if ($is_game_running -eq $null) {
-    Write-Host "Game is not running. Starting Game..."
-    Start-Process -FilePath "steam://rungameid/1364780"
-    Start-Sleep -Seconds 10
-} else {
-    Write-Host "Game is already running."
-}
 
 $obs_process_name = "obs64"
 $is_obs_running = Get-Process -Name $obs_process_name -ErrorAction SilentlyContinue

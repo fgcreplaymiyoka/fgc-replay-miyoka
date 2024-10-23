@@ -1,11 +1,16 @@
 Write-Host "Deploying Replay Viewer..."
 
-$google_cloud_platform_project_id = "<todo>"
-$google_cloud_platform_region = "<todo>"
-$gcp_replay_viewer_service_account_name = "<todo>"
-$gcp_replay_viewer_service_account = "${gcp_replay_viewer_service_account_name}@${google_cloud_platform_project_id}.iam.gserviceaccount.com"
-$secret_id = "<todo>"
-$image = "fgcreplaymiyoka/replay-viewer:latest"
+poetry run python miyoka/export-config-to-dotenv.py
+
+get-content .\.env | foreach {
+    $name, $value = $_.split('=')
+    set-content env:\$name $value
+}
+
+$google_cloud_platform_region = $Env:MIYOKA_GCP_REGION
+$gcp_replay_viewer_service_account = $Env:MIYOKA_GCP_SERVICE_ACCOUNTS_REPLAY_VIEWER_EMAIL
+$secret_id = $Env:MIYOKA_GCP_SECRETS_CONFIG_ID
+$image = $Env:MIYOKA_GCP_CLOUD_RUN_SERVICE_REPLAY_VIEWER_IMAGE
 $config_path = Join-Path $PSScriptRoot "config.yaml"
 
 gcloud --quiet secrets delete $secret_id

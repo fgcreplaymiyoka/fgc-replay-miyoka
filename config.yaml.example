@@ -76,6 +76,10 @@ gcp:
       # In general, you should use the official image published in the Docker Hub.
       # Optionally, you can specify the image in artifact registry. In this case, you must setup `artifact_registry` section.
       image: fgcreplaymiyoka/replay-viewer:latest
+  secrets:
+    # config.yaml is uploaded to a secret and mounted to the Cloud Run service instance.
+    config:
+      id:
   cloud_run_job:
     replay_analyzer:
       # (Optional) Name of the Cloud Run Job for Replay Analyzer.
