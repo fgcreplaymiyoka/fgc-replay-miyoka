@@ -76,7 +76,7 @@ round_id = st.session_state.current_round_id
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
 html_string = f"""
-<video controls="" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
+<video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
 """
 
 st.markdown(html_string, unsafe_allow_html=True)
@@ -155,7 +155,7 @@ c = (
         x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
         y={"field": "lp", "type": "quantitative"},
         tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
-        color=alt.Color('character:N', legend=alt.Legend(orient='bottom')),
+        color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
     )
 )
 
@@ -175,7 +175,9 @@ thresholds = pd.DataFrame(
 rules = (
     alt.Chart(thresholds)
     .mark_rule()
-    .encode(alt.Y("lp:Q", title=None), color=alt.value("#224455"), opacity=alt.value(0.3))
+    .encode(
+        alt.Y("lp:Q", title=None), color=alt.value("#224455"), opacity=alt.value(0.3)
+    )
 )
 
 text = (
@@ -196,7 +198,7 @@ c = (
     .encode(
         x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
         y=alt.Y("result", aggregate="count", title=None),
-        color=alt.Color('result', legend=alt.Legend(orient='bottom')),
+        color=alt.Color("result", legend=alt.Legend(orient="bottom")),
     )
 )
 st.altair_chart(c, use_container_width=True)

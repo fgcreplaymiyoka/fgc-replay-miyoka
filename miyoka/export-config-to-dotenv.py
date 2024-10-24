@@ -1,6 +1,7 @@
 from miyoka.container import Container
 import os
 
+
 def get_all_keys(d, parents=None):
     for key, value in d.items():
         keys = parents + [key] if parents else [key]
@@ -8,6 +9,7 @@ def get_all_keys(d, parents=None):
             yield from get_all_keys(value, parents=keys)
         else:
             yield keys, value
+
 
 if __name__ == "__main__":
     container = Container()
