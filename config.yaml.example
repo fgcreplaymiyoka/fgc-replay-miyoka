@@ -135,6 +135,8 @@ replay_viewer:
   debug_mode: false
   # Player name of your game account
   player_name:
+  # Time range to display the replay dataset
+  time_range: 30 days
 log:
   name: miyoka
   dir_path: logs

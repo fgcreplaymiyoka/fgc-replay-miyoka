@@ -15,6 +15,7 @@ class ReplayViewerHelper:
         logger: Logger,
         password: str,
         player_name: str,
+        time_range: str,
         debug_mode: bool,
         *args,
         **kwargs,
@@ -22,6 +23,7 @@ class ReplayViewerHelper:
         self.logger = logger
         self.password = password
         self.player_name = player_name
+        self.time_range = time_range
         self._debug_mode = debug_mode
 
     @property
@@ -56,3 +58,7 @@ class ReplayViewerHelper:
         if "password_correct" in st.session_state:
             st.error("😕 Password incorrect")
         return False
+
+    @property
+    def should_redact_pii(self):
+        return self.password == "None"

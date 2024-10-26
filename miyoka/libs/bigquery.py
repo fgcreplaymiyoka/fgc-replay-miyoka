@@ -105,11 +105,13 @@ class ReplayDataset(BaseBqClient):
         ).to_dataframe()
         return rows.iloc[0]["metadata"]
 
-    def get_all_rows(
-        self,
-        limit: int = 1000,
-    ):
+    def get_all_rows(self, time_range: str = "30 days"):
         table_id = f"{self.bq_client.project}.{self.dataset_name}.{self.table_name}"
+
+        delta = pd.Timedelta(time_range).to_pytimedelta()
+        min_played_at = (datetime.now(timezone.utc) - delta).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
 
         all_rows = self.bq_client.query(
             f"""
@@ -133,8 +135,8 @@ class ReplayDataset(BaseBqClient):
                metadata.played_at as played_at,
                recorded_at
         FROM `{table_id}`
+        WHERE JSON_VALUE(metadata.played_at) >= "{min_played_at}"
         ORDER BY JSON_VALUE(metadata.played_at) ASC
-        LIMIT {limit}
         """
         ).to_dataframe()
 
