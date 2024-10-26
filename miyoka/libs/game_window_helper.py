@@ -78,8 +78,14 @@ class GameWindowHelper:
 
     def wait_until_game_focused(self):
         game_window = self.get_game_window()
-        game_window.activate()
-        game_window.moveTo(0, 0)
+        try:
+            game_window.activate()
+            game_window.moveTo(0, 0)
+        except Exception as e:
+            self.logger.error(
+                f"Failed to activate window. {e}"
+            )
+
         # Wait for the window to be focused
         while not game_window.isActive:
             time.sleep(0.1)
