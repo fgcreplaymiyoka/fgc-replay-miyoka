@@ -118,6 +118,8 @@ current_row_player_side = (
 )
 replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
+next_round_exist = round_id < len(current_row["p1_round_results"])
+prev_round_exist = round_id > 1
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
 html_string = f"""
@@ -144,30 +146,35 @@ left_col, middle_col, right_col = st.columns(3)
 
 left_col.button("Next match", on_click=next_match)
 left_col.button("Prev match", on_click=prev_match)
-middle_col.button("Next round", on_click=next_round)
-middle_col.button("Prev round", on_click=prev_round)
+if not should_redact_pii:
+    left_col.write(f"Replay ID: {current_row['replay_id']}")
+left_col.write(f"Date: {current_row['played_at']}")
+if next_round_exist:
+    middle_col.button("Next round", on_click=next_round)
+if prev_round_exist:
+    middle_col.button("Prev round", on_click=prev_round)
+middle_col.write(f"Round: {st.session_state.current_round_id}")
 
-
-right_col.markdown(
-    f"""
+replay_markdown = """
 |info|player 1|player 2|
-|---|---|---|
-|name|{render_current_row_value('p1_player_name')}|{render_current_row_value('p2_player_name')}
-|character|{render_current_row_value('p1_character')}|{render_current_row_value('p2_character')}
-|mode|{render_current_row_value('p1_mode')}|{render_current_row_value('p2_mode')}
-|result|{render_current_row_value('p1_result')}|{render_current_row_value('p2_result')}
-|round result|{render_current_row_value('p1_round_results')}|{render_current_row_value('p2_round_results')}
-|lp|{render_current_row_value('p1_lp')}|{render_current_row_value('p2_lp')}
-|mr|{render_current_row_value('p1_mr')}|{render_current_row_value('p2_mr')}
-|rank|{render_current_row_value('p1_rank')}|{render_current_row_value('p2_rank')}
+|---|---|---|"""
 
-|metadata|value|
-|---|---|
-|replay_id|{current_row['replay_id']}|
-|played_at|{current_row['played_at']}|
-|recorded_at|{current_row['recorded_at']}|
+if not should_redact_pii:
+    replay_markdown += (
+        f"|name|{current_row['p1_player_name']}|{current_row['p2_player_name']}|\n"
+    )
+
+replay_markdown += f"""
+|character|{render_current_row_value('p1_character')}|{render_current_row_value('p2_character')}|
+|mode|{render_current_row_value('p1_mode')}|{render_current_row_value('p2_mode')}|
+|result|{render_current_row_value('p1_result')}|{render_current_row_value('p2_result')}|
+|round result|{render_current_row_value('p1_round_results')}|{render_current_row_value('p2_round_results')}|
+|lp|{render_current_row_value('p1_lp')}|{render_current_row_value('p2_lp')}|
+|mr|{render_current_row_value('p1_mr')}|{render_current_row_value('p2_mr')}|
+|rank|{render_current_row_value('p1_rank')}|{render_current_row_value('p2_rank')}|
 """
-)
+
+right_col.markdown(replay_markdown)
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
