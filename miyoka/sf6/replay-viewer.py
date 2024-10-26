@@ -87,6 +87,11 @@ replay_viewer_helper: ReplayViewerHelper = load_replay_viewer_helper()
 
 player_name = replay_viewer_helper.player_name
 time_range = replay_viewer_helper.time_range
+should_redact_pii = replay_viewer_helper.should_redact_pii
+
+debug_mode = replay_viewer_helper.debug_mode
+if debug_mode:
+    should_redact_pii = False
 
 replay_dataset: pd.DataFrame = load_replay_dataset(time_range)
 replay_storage: ReplayStorage = load_replay_storage()
@@ -98,8 +103,6 @@ character_list: list[str] = load_character_list()
 # In production, users must enter the global password otherwise can't access the page.
 if not replay_viewer_helper.check_password():
     st.stop()
-
-should_redact_pii = replay_viewer_helper.should_redact_pii()
 
 # -------------------------------------------------------------------
 st.subheader("Replay", divider=True)
@@ -160,9 +163,8 @@ replay_markdown = """
 |---|---|---|"""
 
 if not should_redact_pii:
-    replay_markdown += (
-        f"|name|{current_row['p1_player_name']}|{current_row['p2_player_name']}|\n"
-    )
+    replay_markdown += f"""
+|name|{render_current_row_value('p1_player_name')}|{render_current_row_value('p2_player_name')}|"""
 
 replay_markdown += f"""
 |character|{render_current_row_value('p1_character')}|{render_current_row_value('p2_character')}|
@@ -214,13 +216,17 @@ player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
 player_dataset = player_dataset.sort_values(by="played_at")
 player_dataset["match"] = [i for i in range(len(player_dataset))]
 
+base_tooltip = ["match", "rank", "character", "played_at"]
+if not should_redact_pii:
+    base_tooltip.append("replay_id")
+
 c = (
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
         x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
         y={"field": "lp", "type": "quantitative"},
-        tooltip=["match", "lp", "rank", "character", "replay_id", "played_at"],
+        tooltip=["lp"] + base_tooltip,
         color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
     )
 )
@@ -253,6 +259,18 @@ text = (
 )
 
 st.altair_chart(c + rules + text, use_container_width=True)
+
+st.altair_chart(
+    alt.Chart(player_dataset)
+    .mark_bar(clip=True)
+    .encode(
+        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
+        y=alt.Y("mr:Q", title=None),
+        tooltip=["mr"] + base_tooltip,
+        color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
+    ),
+    use_container_width=True,
+)
 
 # -------------------------------------------------------------------
 
@@ -294,7 +312,7 @@ st.bar_chart(character_count_df, x_label="character", y_label="match count")
 
 # -------------------------------------------------------------------
 
-if replay_viewer_helper.debug_mode:
+if debug_mode:
     st.subheader("Debug info", divider=True)
     "replay_dataset"
     st.dataframe(replay_dataset)

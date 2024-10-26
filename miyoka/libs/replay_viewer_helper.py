@@ -59,5 +59,6 @@ class ReplayViewerHelper:
             st.error("😕 Password incorrect")
         return False
 
+    @property
     def should_redact_pii(self):
         return self.password == "None"
