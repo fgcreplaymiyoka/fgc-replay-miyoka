@@ -10,6 +10,7 @@ get-content .\.env | foreach {
 $google_cloud_platform_region = $Env:MIYOKA_GCP_REGION
 $gcp_replay_viewer_service_account = $Env:MIYOKA_GCP_SERVICE_ACCOUNTS_REPLAY_VIEWER_EMAIL
 $secret_id = $Env:MIYOKA_GCP_SECRETS_CONFIG_ID
+$service_name = $Env:MIYOKA_GCP_CLOUD_RUN_SERVICE_REPLAY_VIEWER_NAME
 $image = $Env:MIYOKA_GCP_CLOUD_RUN_SERVICE_REPLAY_VIEWER_IMAGE
 $config_path = Join-Path $PSScriptRoot "config.yaml"
 
@@ -23,7 +24,7 @@ gcloud secrets add-iam-policy-binding $secret_id `
     --member="serviceAccount:${gcp_replay_viewer_service_account}" `
     --role="roles/secretmanager.secretAccessor"
 
-gcloud run deploy miyoka-viewer `
+gcloud run deploy ${service_name} `
     --region ${google_cloud_platform_region} `
     --service-account=${gcp_replay_viewer_service_account} `
     --allow-unauthenticated `
