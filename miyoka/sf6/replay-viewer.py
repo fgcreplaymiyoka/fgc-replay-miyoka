@@ -183,7 +183,7 @@ st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 # -------------------------------------------------------------------
 
-st.subheader("Rank progress", divider=True)
+st.subheader("Road to Master", divider=True)
 p1_player_dataset = replay_dataset[
     replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
@@ -261,12 +261,16 @@ text = (
 
 st.altair_chart(c + rules + text, use_container_width=True)
 
+# -------------------------------------------------------------------
+
+st.subheader("Master League", divider=True)
+
 st.altair_chart(
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
         x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
-        y=alt.Y("mr:Q", title=None),
+        y=alt.Y("mr:Q", title=None).scale(domain=(500, 2500)),
         tooltip=["mr"] + base_tooltip,
         color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
     ),
