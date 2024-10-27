@@ -265,7 +265,7 @@ class ReplayUploader(ReplayUploaderBase):
                 case _:
                     pass
 
-            time.sleep(0.5)
+            time.sleep(0.2)
 
             if tab_repeat_mode:
                 pydirectinput.press("Tab")
