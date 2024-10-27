@@ -1,6 +1,7 @@
 [![Releases](https://img.shields.io/github/release/fgcreplaymiyoka/fgc-replay-miyoka?style=flat-square)](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases)
 [![CI](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/actions/workflows/publish.yml/badge.svg)](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/actions/workflows/publish.yml)
 [![License](https://img.shields.io/github/license/fgcreplaymiyoka/fgc-replay-miyoka)](https://www.gnu.org/licenses/gpl-3.0.html)
+[![Twitter URL](https://img.shields.io/twitter/url/https/twitter.com/FgcReplayMiyoka.svg?style=social&label=Follow%20%40FgcReplayMiyoka)](https://x.com/FgcReplayMiyoka)
 
 # FGC Replay Miyoka 🕹️
 
