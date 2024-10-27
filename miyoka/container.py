@@ -177,6 +177,7 @@ class Container(containers.DeclarativeContainer):
         debug_mode=config.replay_viewer.debug_mode,
         player_name=config.replay_viewer.player_name,
         time_range=config.replay_viewer.time_range,
+        after_time=config.replay_viewer.after_time,
     )
 
     scene_splitter = providers.Factory(

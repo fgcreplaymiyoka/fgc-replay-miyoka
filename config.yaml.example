@@ -135,8 +135,10 @@ replay_viewer:
   debug_mode: false
   # Player name of your game account
   player_name:
-  # Time range to display the replay dataset
-  time_range: 30 days
+  # Replay dataset after the specified time ago is displayed. e.g. 30 days
+  time_range:
+  # Replay dataset after the specific date time is displayed. e.g. 2024-01-01 00:00:00
+  after_time:
 log:
   name: miyoka
   dir_path: logs

@@ -82,9 +82,7 @@ class GameWindowHelper:
             game_window.activate()
             game_window.moveTo(0, 0)
         except Exception as e:
-            self.logger.error(
-                f"Failed to activate window. {e}"
-            )
+            self.logger.error(f"Failed to activate window. {e}")
 
         # Wait for the window to be focused
         while not game_window.isActive:

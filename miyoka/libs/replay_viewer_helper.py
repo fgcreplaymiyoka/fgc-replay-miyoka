@@ -16,6 +16,7 @@ class ReplayViewerHelper:
         password: str,
         player_name: str,
         time_range: str,
+        after_time: str,
         debug_mode: bool,
         *args,
         **kwargs,
@@ -24,6 +25,7 @@ class ReplayViewerHelper:
         self.password = password
         self.player_name = player_name
         self.time_range = time_range
+        self.after_time = after_time
         self._debug_mode = debug_mode
 
     @property

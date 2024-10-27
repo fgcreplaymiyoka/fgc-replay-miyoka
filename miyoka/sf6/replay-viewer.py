@@ -15,9 +15,9 @@ cache_ttl = 3600  # 1 hour
 
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay dataset...")
-def load_replay_dataset(time_range: str):
+def load_replay_dataset(time_range: str = None, after_time: str = None) -> pd.DataFrame:
     replay_dataset: ReplayDataset = Container().replay_dataset()
-    return replay_dataset.get_all_rows(time_range=time_range)
+    return replay_dataset.get_all_rows(time_range=time_range, after_time=after_time)
 
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay storage...")
@@ -87,13 +87,14 @@ replay_viewer_helper: ReplayViewerHelper = load_replay_viewer_helper()
 
 player_name = replay_viewer_helper.player_name
 time_range = replay_viewer_helper.time_range
+after_time = replay_viewer_helper.after_time
 should_redact_pii = replay_viewer_helper.should_redact_pii
 
 debug_mode = replay_viewer_helper.debug_mode
 if debug_mode:
     should_redact_pii = False
 
-replay_dataset: pd.DataFrame = load_replay_dataset(time_range)
+replay_dataset: pd.DataFrame = load_replay_dataset(time_range, after_time)
 replay_storage: ReplayStorage = load_replay_storage()
 character_list: list[str] = load_character_list()
 
