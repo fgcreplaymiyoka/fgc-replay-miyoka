@@ -98,6 +98,8 @@ replay_uploader:
   stop_after_duplicate_replays: 3
   # If true, skip recording the replay. This is useful to extract only replay summaries.
   skip_recording: false
+  # If true, exit the game when replay upload is done.
+  exit_to_desktop: true
 replay_analyzer:
   # Batch size of the frame splitter
   batch_size: 1000

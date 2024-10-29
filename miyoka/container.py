@@ -168,6 +168,7 @@ class Container(containers.DeclarativeContainer):
         klass_path="screen_customizer.ScreenCustomizer",
         logger=logger,
         game_window_helper=game_window_helper,
+        exit_to_desktop=config.replay_uploader.exit_to_desktop,
     )
 
     replay_viewer_helper = providers.Factory(

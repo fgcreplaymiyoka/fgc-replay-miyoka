@@ -26,11 +26,13 @@ class ScreenCustomizer(ScreenCustomizerBase):
         self,
         logger: Logger,
         game_window_helper: GameWindowHelper,
+        exit_to_desktop: bool,
     ):
         super().__init__()
 
         self.logger = logger
         self.game_window_helper = game_window_helper
+        self.exit_to_desktop = exit_to_desktop
 
     def change(self):
         self.logger.info("Changing screen.....")
@@ -153,6 +155,10 @@ class ScreenCustomizer(ScreenCustomizerBase):
                 and is_language_changed
             ):
                 self.logger.info(f"Restoring screen complete!")
+
+                if self.exit_to_desktop:
+                    self._exit_to_desktop()
+
                 break
 
             match screen:
@@ -268,6 +274,43 @@ class ScreenCustomizer(ScreenCustomizerBase):
                     | "KeywordSearchByUserCode"
                 ):
                     pydirectinput.press("ESC")  # Exit
+                case _:
+                    pass
+
+            time.sleep(1)
+
+    def _exit_to_desktop(self):
+        self.logger.info("Exiting to desktop.....")
+
+        did_exit = False
+
+        while True:
+            frame = self.game_window_helper.grab_frame()
+            screen = self.game_window_helper.identify_screen(frame)
+
+            self.logger.info(f"screen: {screen}")
+
+            if did_exit:
+                self.logger.info(f"Exit to desktop complete!")
+                break
+
+            match screen:
+                case "TitleScreen":
+                    pydirectinput.press("Tab")  # Press Any Button
+                case "MainBh":
+                    pydirectinput.press("Tab")  # Open menu
+                    time.sleep(3)
+                case "News":
+                    pydirectinput.press("ESC")  # Exit from news
+                case "MultiMenuProfile":
+                    pydirectinput.press("s")  # Down
+                    pydirectinput.press("s")  # Down
+                case "MultiMenuExitToDesktop":
+                    pydirectinput.press("f")  # Enter
+                case "MultiMenuExitToDesktopConfirmation":
+                    pydirectinput.press("a")  # Left
+                    pydirectinput.press("f")  # Enter
+                    did_exit = True
                 case _:
                     pass
 
