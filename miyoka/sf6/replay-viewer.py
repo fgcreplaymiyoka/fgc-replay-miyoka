@@ -285,7 +285,7 @@ c = (
     alt.Chart(player_dataset)
     .mark_bar()
     .encode(
-        x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
+        x=alt.X("utcmonthdate(played_at):O", title=None),
         y=alt.Y("result", aggregate="count", title=None),
         color=alt.Color("result", legend=alt.Legend(orient="bottom")),
     )
@@ -294,26 +294,39 @@ st.altair_chart(c, use_container_width=True)
 
 # -------------------------------------------------------------------
 
-st.subheader("Match count by character", divider=True)
+st.subheader("Opponent characters", divider=True)
 
-p1_player_name_char_dataset = replay_dataset[["p1_player_name", "p1_character"]].rename(
-    columns={"p1_player_name": "player_name", "p1_character": "character"}
-)
-p2_player_name_char_dataset = replay_dataset[["p2_player_name", "p2_character"]].rename(
-    columns={"p2_player_name": "player_name", "p2_character": "character"}
-)
-player_name_char_dataset = pd.concat(
-    [p1_player_name_char_dataset, p2_player_name_char_dataset], sort=True, axis=0
-)
-
-player_name_char_dataset = player_name_char_dataset[
-    ~player_name_char_dataset["player_name"].str.contains(
-        player_name, case=False, na=False
-    )
+p1_opponent_dataset = replay_dataset[
+    ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
+p2_opponent_dataset = replay_dataset[
+    ~replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
+]
+p1_opponent_dataset = p1_opponent_dataset[["p1_character", "played_at"]].rename(
+    columns={
+        "p1_character": "character",
+    }
+)
+p2_opponent_dataset = p2_opponent_dataset[["p2_character", "played_at"]].rename(
+    columns={
+        "p2_character": "character",
+    }
+)
+opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
+opponent_dataset = opponent_dataset.reset_index().rename(columns={"index": "match"})
+opponent_dataset = opponent_dataset.sort_values(by="played_at")
+opponent_dataset["match"] = [i for i in range(len(opponent_dataset))]
 
-character_count_df = player_name_char_dataset.groupby("character").size()
-st.bar_chart(character_count_df, x_label="character", y_label="match count")
+c = (
+    alt.Chart(opponent_dataset)
+    .mark_rect()
+    .encode(
+        x=alt.X("utcmonthdate(played_at):O", title=None),
+        y=alt.Y("character"),
+        color=alt.Color("count():Q"),
+    )
+)
+st.altair_chart(c, use_container_width=True)
 
 # -------------------------------------------------------------------
 
