@@ -106,7 +106,7 @@ if not replay_viewer_helper.check_password():
     st.stop()
 
 # -------------------------------------------------------------------
-st.subheader("Replay", divider=True)
+# st.subheader("Replay", divider=True)
 
 last_replay_index = len(replay_dataset) - 1
 
@@ -138,26 +138,24 @@ st.write(
     """<style>
 
 [data-testid="column"] {
-    width: calc(33.3333% - 1rem) !important;
-    flex: 1 1 calc(33.3333% - 1rem) !important;
-    min-width: calc(33% - 1rem) !important;
+    width: calc(25% - 1rem) !important;
+    flex: 1 1 calc(25% - 1rem) !important;
+    min-width: calc(25% - 1rem) !important;
+}
+.big-font {
+    font-size:10px !important;
 }
 </style>""",
     unsafe_allow_html=True,
 )
-left_col, middle_col, right_col = st.columns(3)
+col_1, col_2, col_3, col_4 = st.columns(4)
 
-
-left_col.button("Next match", on_click=next_match)
-left_col.button("Prev match", on_click=prev_match)
-if not should_redact_pii:
-    left_col.write(f"Replay ID: {current_row['replay_id']}")
-left_col.write(f"Date: {current_row['played_at']}")
+col_1.button("Next match", on_click=next_match)
+col_2.button("Prev match", on_click=prev_match)
 if next_round_exist:
-    middle_col.button("Next round", on_click=next_round)
+    col_3.button("Next round", on_click=next_round)
 if prev_round_exist:
-    middle_col.button("Prev round", on_click=prev_round)
-middle_col.write(f"Round: {st.session_state.current_round_id}")
+    col_4.button("Prev round", on_click=prev_round)
 
 replay_markdown = """
 |info|player 1|player 2|
@@ -177,8 +175,23 @@ replay_markdown += f"""
 |rank|{render_current_row_value('p1_rank')}|{render_current_row_value('p2_rank')}|
 """
 
-right_col.markdown(replay_markdown)
+st.markdown(replay_markdown)
 
+col_1, col_2, col_3, col_4 = st.columns(4)
+
+if not should_redact_pii:
+    col_1.markdown(
+        f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
+        unsafe_allow_html=True,
+    )
+
+col_2.markdown(
+    f"<p class='big-font'>Date: {current_row['played_at']}</p>", unsafe_allow_html=True
+)
+col_3.markdown(
+    f"<p class='big-font'>Round: {st.session_state.current_round_id}</p>",
+    unsafe_allow_html=True,
+)
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 # -------------------------------------------------------------------
@@ -322,8 +335,8 @@ c = (
     .mark_rect()
     .encode(
         x=alt.X("utcmonthdate(played_at):O", title=None),
-        y=alt.Y("character"),
-        color=alt.Color("count():Q"),
+        y=alt.Y("character", title=None),
+        color=alt.Color("count():Q", legend=alt.Legend(orient="bottom")),
     )
 )
 st.altair_chart(c, use_container_width=True)
