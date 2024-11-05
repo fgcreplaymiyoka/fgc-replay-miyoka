@@ -195,14 +195,21 @@ col_4.markdown(
 )
 
 if st.button("Generate download link"):
-    replay_storage.download(replay_id, f"{round_id}.mp4", "replay.mp4")
-    with open("replay.mp4", "rb") as file:
+    import requests
+
+    # Fetch the file content
+    video_path = replay_storage.get_authenticated_url(replay_id, round_id)
+    response = requests.get(video_path)
+    if response.status_code == 200:
+        # Use st.download_button with the fetched content
         st.download_button(
             label="Download replay",
-            data=file,
+            data=response.content,
             file_name="replay.mp4",
             mime="video/mp4",
         )
+    else:
+        st.write("Failed to retrieve the file.")
 
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
