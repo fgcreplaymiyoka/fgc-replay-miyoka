@@ -11,6 +11,10 @@ import altair as alt
 import re
 import numpy
 
+###############################################################################################
+# Functions
+###############################################################################################
+
 cache_ttl = 3600  # 1 hour
 
 
@@ -28,20 +32,6 @@ def load_replay_storage() -> ReplayStorage:
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay viewer...")
 def load_replay_viewer_helper():
     return Container().replay_viewer_helper()
-
-
-@st.cache_data(ttl=cache_ttl, show_spinner="Loading character list...")
-def load_character_list():
-    global replay_dataset
-
-    p1_list = (
-        replay_dataset.groupby("p1_character").p1_character.nunique().index.to_list()
-    )
-    p2_list = (
-        replay_dataset.groupby("p2_character").p2_character.nunique().index.to_list()
-    )
-
-    return set(p1_list + p2_list)
 
 
 def reset_current_replay_index(*args, **kwargs):
@@ -83,6 +73,10 @@ def render_current_row_value(key: str) -> str:
     return value
 
 
+###############################################################################################
+# Initialization
+###############################################################################################
+
 replay_viewer_helper: ReplayViewerHelper = load_replay_viewer_helper()
 
 player_name = replay_viewer_helper.player_name
@@ -96,17 +90,6 @@ if debug_mode:
 
 replay_dataset: pd.DataFrame = load_replay_dataset(time_range, after_time)
 replay_storage: ReplayStorage = load_replay_storage()
-character_list: list[str] = load_character_list()
-
-###############################################################################################
-# View
-###############################################################################################
-# In production, users must enter the global password otherwise can't access the page.
-if not replay_viewer_helper.check_password():
-    st.stop()
-
-# -------------------------------------------------------------------
-# st.subheader("Replay", divider=True)
 
 last_replay_index = len(replay_dataset) - 1
 
@@ -122,9 +105,21 @@ current_row_player_side = (
 )
 replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
+next_match_exist = st.session_state.current_replay_index < (len(replay_dataset) - 1)
+prev_match_exist = st.session_state.current_replay_index > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
+
+###############################################################################################
+# View
+###############################################################################################
+# In production, users must enter the global password otherwise can't access the page.
+if not replay_viewer_helper.check_password():
+    st.stop()
+
+# -------------------------------------------------------------------
+# st.subheader("Replay", divider=True)
 
 html_string = f"""
 <video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
@@ -150,8 +145,10 @@ st.write(
 )
 col_1, col_2, col_3, col_4 = st.columns(4)
 
-col_1.button("Next match", on_click=next_match)
-col_2.button("Prev match", on_click=prev_match)
+if next_match_exist:
+    col_1.button("Next match", on_click=next_match)
+if prev_match_exist:
+    col_2.button("Prev match", on_click=prev_match)
 if next_round_exist:
     col_3.button("Next round", on_click=next_round)
 if prev_round_exist:
