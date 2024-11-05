@@ -189,6 +189,11 @@ col_3.markdown(
     f"<p class='big-font'>Round: {st.session_state.current_round_id}</p>",
     unsafe_allow_html=True,
 )
+col_4.markdown(
+    f"<p class='big-font'><a href='{video_path}' download='replay.mp4'>Download replay</a></p>",
+    unsafe_allow_html=True,
+)
+
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 # -------------------------------------------------------------------
