@@ -194,6 +194,23 @@ col_4.markdown(
     unsafe_allow_html=True,
 )
 
+if st.button("Generate download link"):
+    import requests
+
+    # Fetch the file content
+    response = requests.get(video_path)
+    if response.status_code == 200:
+        # Use st.download_button with the fetched content
+        st.download_button(
+            label="Download replay",
+            data=response.content,
+            file_name="replay.mp4",
+            mime="video/mp4",
+        )
+    else:
+        st.write("Failed to retrieve the file.")
+
+
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 # -------------------------------------------------------------------
