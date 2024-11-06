@@ -11,7 +11,7 @@ It's open source and free.
 
 ## Demo
 
-https://miyoka-viewer-891260210315.asia-northeast1.run.app/
+https://miyoka-viewer-vmpwtquqga-an.a.run.app/
 
 ## Why Miyoka?
 

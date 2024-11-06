@@ -45,7 +45,9 @@ viewer:
 	poetry run streamlit run miyoka/sf6/replay-viewer.py \
 		--server.port=8080 \
 		--server.address=0.0.0.0 \
-		--server.fileWatcherType="none"
+		--server.fileWatcherType="none" \
+		--server.headless true \
+		--client.toolbarMode viewer
 
 viewer-in-docker:
 	docker run \

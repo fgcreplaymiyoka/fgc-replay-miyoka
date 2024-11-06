@@ -10,6 +10,11 @@ from miyoka.container import Container
 import altair as alt
 import re
 import numpy
+import requests
+
+###############################################################################################
+# Functions
+###############################################################################################
 
 cache_ttl = 3600  # 1 hour
 
@@ -28,20 +33,6 @@ def load_replay_storage() -> ReplayStorage:
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay viewer...")
 def load_replay_viewer_helper():
     return Container().replay_viewer_helper()
-
-
-@st.cache_data(ttl=cache_ttl, show_spinner="Loading character list...")
-def load_character_list():
-    global replay_dataset
-
-    p1_list = (
-        replay_dataset.groupby("p1_character").p1_character.nunique().index.to_list()
-    )
-    p2_list = (
-        replay_dataset.groupby("p2_character").p2_character.nunique().index.to_list()
-    )
-
-    return set(p1_list + p2_list)
 
 
 def reset_current_replay_index(*args, **kwargs):
@@ -83,6 +74,14 @@ def render_current_row_value(key: str) -> str:
     return value
 
 
+def generate_download_link():
+    st.session_state.generate_download_link_clicked = True
+
+
+###############################################################################################
+# Initialization
+###############################################################################################
+
 replay_viewer_helper: ReplayViewerHelper = load_replay_viewer_helper()
 
 player_name = replay_viewer_helper.player_name
@@ -96,17 +95,6 @@ if debug_mode:
 
 replay_dataset: pd.DataFrame = load_replay_dataset(time_range, after_time)
 replay_storage: ReplayStorage = load_replay_storage()
-character_list: list[str] = load_character_list()
-
-###############################################################################################
-# View
-###############################################################################################
-# In production, users must enter the global password otherwise can't access the page.
-if not replay_viewer_helper.check_password():
-    st.stop()
-
-# -------------------------------------------------------------------
-st.subheader("Replay", divider=True)
 
 last_replay_index = len(replay_dataset) - 1
 
@@ -116,21 +104,53 @@ if "current_replay_index" not in st.session_state:
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
 
+if "generate_download_link_clicked" not in st.session_state:
+    st.session_state.generate_download_link_clicked = False
+
 current_row = replay_dataset.iloc[st.session_state.current_replay_index]
 current_row_player_side = (
     1 if re.match(player_name, current_row["p1_player_name"]) else 2
 )
 replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
+next_match_exist = st.session_state.current_replay_index < (len(replay_dataset) - 1)
+prev_match_exist = st.session_state.current_replay_index > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
-html_string = f"""
-<video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
-"""
+###############################################################################################
+# View
+###############################################################################################
+# In production, users must enter the global password otherwise can't access the page.
+if not replay_viewer_helper.check_password():
+    st.stop()
 
-st.markdown(html_string, unsafe_allow_html=True)
+# -------------------------------------------------------------------
+# st.subheader("Replay", divider=True)
+
+if st.session_state.generate_download_link_clicked:
+    # Fetch the file content
+    response = requests.get(video_path)
+    if response.status_code == 200:
+        # Use st.download_button with the fetched content
+        st.download_button(
+            label="Download replay",
+            data=response.content,
+            file_name="replay.mp4",
+            mime="video/mp4",
+        )
+    else:
+        st.write("Failed to retrieve the file.")
+
+    st.session_state.generate_download_link_clicked = False
+else:
+    st.markdown(
+        f"""
+    <video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Workaround for the column width issue
 # https://github.com/streamlit/streamlit/issues/5003#issuecomment-1276611218
@@ -138,26 +158,26 @@ st.write(
     """<style>
 
 [data-testid="column"] {
-    width: calc(33.3333% - 1rem) !important;
-    flex: 1 1 calc(33.3333% - 1rem) !important;
-    min-width: calc(33% - 1rem) !important;
+    width: calc(25% - 1rem) !important;
+    flex: 1 1 calc(25% - 1rem) !important;
+    min-width: calc(25% - 1rem) !important;
+}
+.big-font {
+    font-size:10px !important;
 }
 </style>""",
     unsafe_allow_html=True,
 )
-left_col, middle_col, right_col = st.columns(3)
+col_1, col_2, col_3, col_4 = st.columns(4)
 
-
-left_col.button("Next match", on_click=next_match)
-left_col.button("Prev match", on_click=prev_match)
-if not should_redact_pii:
-    left_col.write(f"Replay ID: {current_row['replay_id']}")
-left_col.write(f"Date: {current_row['played_at']}")
+if next_match_exist:
+    col_1.button("Next match", on_click=next_match)
+if prev_match_exist:
+    col_2.button("Prev match", on_click=prev_match)
 if next_round_exist:
-    middle_col.button("Next round", on_click=next_round)
+    col_3.button("Next round", on_click=next_round)
 if prev_round_exist:
-    middle_col.button("Prev round", on_click=prev_round)
-middle_col.write(f"Round: {st.session_state.current_round_id}")
+    col_4.button("Prev round", on_click=prev_round)
 
 replay_markdown = """
 |info|player 1|player 2|
@@ -177,7 +197,29 @@ replay_markdown += f"""
 |rank|{render_current_row_value('p1_rank')}|{render_current_row_value('p2_rank')}|
 """
 
-right_col.markdown(replay_markdown)
+st.markdown(replay_markdown)
+
+col_1, col_2, col_3, col_4 = st.columns(4)
+
+if not should_redact_pii:
+    col_1.markdown(
+        f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
+        unsafe_allow_html=True,
+    )
+
+col_2.markdown(
+    f"<p class='big-font'>Date: {current_row['played_at']}</p>", unsafe_allow_html=True
+)
+col_3.markdown(
+    f"<p class='big-font'>Round: {st.session_state.current_round_id}</p>",
+    unsafe_allow_html=True,
+)
+col_4.markdown(
+    f"<p class='big-font'><a href='{video_path}' download='replay.mp4'>Download replay</a></p>",
+    unsafe_allow_html=True,
+)
+
+st.button("Generate download link", on_click=generate_download_link)
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
@@ -285,7 +327,7 @@ c = (
     alt.Chart(player_dataset)
     .mark_bar()
     .encode(
-        x={"field": "played_at", "type": "temporal", "timeUnit": "yearmonthdate"},
+        x=alt.X("utcmonthdate(played_at):O", title=None),
         y=alt.Y("result", aggregate="count", title=None),
         color=alt.Color("result", legend=alt.Legend(orient="bottom")),
     )
@@ -294,26 +336,39 @@ st.altair_chart(c, use_container_width=True)
 
 # -------------------------------------------------------------------
 
-st.subheader("Match count by character", divider=True)
+st.subheader("Opponent characters", divider=True)
 
-p1_player_name_char_dataset = replay_dataset[["p1_player_name", "p1_character"]].rename(
-    columns={"p1_player_name": "player_name", "p1_character": "character"}
-)
-p2_player_name_char_dataset = replay_dataset[["p2_player_name", "p2_character"]].rename(
-    columns={"p2_player_name": "player_name", "p2_character": "character"}
-)
-player_name_char_dataset = pd.concat(
-    [p1_player_name_char_dataset, p2_player_name_char_dataset], sort=True, axis=0
-)
-
-player_name_char_dataset = player_name_char_dataset[
-    ~player_name_char_dataset["player_name"].str.contains(
-        player_name, case=False, na=False
-    )
+p1_opponent_dataset = replay_dataset[
+    ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
+p2_opponent_dataset = replay_dataset[
+    ~replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
+]
+p1_opponent_dataset = p1_opponent_dataset[["p1_character", "played_at"]].rename(
+    columns={
+        "p1_character": "character",
+    }
+)
+p2_opponent_dataset = p2_opponent_dataset[["p2_character", "played_at"]].rename(
+    columns={
+        "p2_character": "character",
+    }
+)
+opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
+opponent_dataset = opponent_dataset.reset_index().rename(columns={"index": "match"})
+opponent_dataset = opponent_dataset.sort_values(by="played_at")
+opponent_dataset["match"] = [i for i in range(len(opponent_dataset))]
 
-character_count_df = player_name_char_dataset.groupby("character").size()
-st.bar_chart(character_count_df, x_label="character", y_label="match count")
+c = (
+    alt.Chart(opponent_dataset)
+    .mark_rect()
+    .encode(
+        x=alt.X("utcmonthdate(played_at):O", title=None),
+        y=alt.Y("character", title=None),
+        color=alt.Color("count():Q", legend=alt.Legend(orient="bottom")),
+    )
+)
+st.altair_chart(c, use_container_width=True)
 
 # -------------------------------------------------------------------
 
