@@ -123,6 +123,7 @@ class ScreenCustomizer(ScreenCustomizerBase):
                     | "CfnReplays"
                     | "MultiMenuCfn"
                     | "FightingGroundPractice"
+                    | "FightingGroundVersus"
                     | "KeywordSearchByUserCode"
                 ):
                     pydirectinput.press("ESC")  # Exit
