@@ -10,6 +10,7 @@ from miyoka.container import Container
 import altair as alt
 import re
 import numpy
+import requests
 
 ###############################################################################################
 # Functions
@@ -73,6 +74,10 @@ def render_current_row_value(key: str) -> str:
     return value
 
 
+def generate_download_link():
+    st.session_state.generate_download_link_clicked = True
+
+
 ###############################################################################################
 # Initialization
 ###############################################################################################
@@ -99,6 +104,9 @@ if "current_replay_index" not in st.session_state:
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
 
+if "generate_download_link_clicked" not in st.session_state:
+    st.session_state.generate_download_link_clicked = False
+
 current_row = replay_dataset.iloc[st.session_state.current_replay_index]
 current_row_player_side = (
     1 if re.match(player_name, current_row["p1_player_name"]) else 2
@@ -121,11 +129,28 @@ if not replay_viewer_helper.check_password():
 # -------------------------------------------------------------------
 # st.subheader("Replay", divider=True)
 
-html_string = f"""
-<video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
-"""
+if st.session_state.generate_download_link_clicked:
+    # Fetch the file content
+    response = requests.get(video_path)
+    if response.status_code == 200:
+        # Use st.download_button with the fetched content
+        st.download_button(
+            label="Download replay",
+            data=response.content,
+            file_name="replay.mp4",
+            mime="video/mp4",
+        )
+    else:
+        st.write("Failed to retrieve the file.")
 
-st.markdown(html_string, unsafe_allow_html=True)
+    st.session_state.generate_download_link_clicked = False
+else:
+    st.markdown(
+        f"""
+    <video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
+    """,
+        unsafe_allow_html=True,
+    )
 
 # Workaround for the column width issue
 # https://github.com/streamlit/streamlit/issues/5003#issuecomment-1276611218
@@ -194,23 +219,7 @@ col_4.markdown(
     unsafe_allow_html=True,
 )
 
-if st.button("Generate download link"):
-    import requests
-
-    # Fetch the file content
-    video_path = replay_storage.get_authenticated_url(replay_id, round_id)
-    response = requests.get(video_path)
-    if response.status_code == 200:
-        # Use st.download_button with the fetched content
-        st.download_button(
-            label="Download replay",
-            data=response.content,
-            file_name="replay.mp4",
-            mime="video/mp4",
-        )
-    else:
-        st.write("Failed to retrieve the file.")
-
+st.button("Generate download link", on_click=generate_download_link)
 
 st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
