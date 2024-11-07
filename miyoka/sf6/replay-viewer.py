@@ -10,7 +10,6 @@ from miyoka.container import Container
 import altair as alt
 import re
 import numpy
-import requests
 
 ###############################################################################################
 # Functions
@@ -19,7 +18,7 @@ import requests
 cache_ttl = 3600  # 1 hour
 
 
-@st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay dataset...")
+@st.cache_data(ttl=cache_ttl, show_spinner="Loading replay dataset...")
 def load_replay_dataset(time_range: str = None, after_time: str = None) -> pd.DataFrame:
     replay_dataset: ReplayDataset = Container().replay_dataset()
     return replay_dataset.get_all_rows(time_range=time_range, after_time=after_time)
@@ -33,10 +32,6 @@ def load_replay_storage() -> ReplayStorage:
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay viewer...")
 def load_replay_viewer_helper():
     return Container().replay_viewer_helper()
-
-
-def reset_current_replay_index(*args, **kwargs):
-    del st.session_state["current_replay_index"]
 
 
 def next_match():
@@ -74,8 +69,8 @@ def render_current_row_value(key: str) -> str:
     return value
 
 
-def generate_download_link():
-    st.session_state.generate_download_link_clicked = True
+def match_range_changed():
+    st.session_state.match_range_changed = True
 
 
 ###############################################################################################
@@ -96,25 +91,88 @@ if debug_mode:
 replay_dataset: pd.DataFrame = load_replay_dataset(time_range, after_time)
 replay_storage: ReplayStorage = load_replay_storage()
 
-last_replay_index = len(replay_dataset) - 1
+last_replay_index = replay_dataset.index[len(replay_dataset) - 1]
 
 if "current_replay_index" not in st.session_state:
     st.session_state.current_replay_index = last_replay_index
 
+if "current_played_after" not in st.session_state:
+    st.session_state.current_played_after = replay_dataset.iloc[0][
+        "played_at"
+    ].to_pydatetime()
+
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
 
-if "generate_download_link_clicked" not in st.session_state:
-    st.session_state.generate_download_link_clicked = False
+if "match_range_changed" not in st.session_state:
+    st.session_state.match_range_changed = True
 
-current_row = replay_dataset.iloc[st.session_state.current_replay_index]
+###############################################################################################
+# Login
+###############################################################################################
+# In production, users must enter the global password otherwise can't access the page.
+if not replay_viewer_helper.check_password():
+    st.stop()
+
+###############################################################################################
+# Filtering
+###############################################################################################
+
+with st.sidebar:
+    played_after = st.slider(
+        "Played after:",
+        value=st.session_state.current_played_after,
+        min_value=replay_dataset.iloc[0]["played_at"],
+        max_value=replay_dataset.iloc[last_replay_index]["played_at"],
+        format="MM/DD",
+    )
+
+    replay_dataset = replay_dataset[replay_dataset["played_at"] >= played_after]
+
+    last_replay_index = len(replay_dataset) - 1
+
+    min_value, max_value = st.slider(
+        "Match range",
+        replay_dataset.index[0],
+        replay_dataset.index[last_replay_index],
+        (
+            replay_dataset.index[0],
+            replay_dataset.index[last_replay_index],
+        ),
+        on_change=match_range_changed,
+    )
+
+    replay_dataset = replay_dataset[
+        (replay_dataset.index >= min_value) & (replay_dataset.index <= max_value)
+    ]
+
+    last_replay_index = len(replay_dataset) - 1
+
+    # st.write(last_replay_index)
+    if st.session_state.match_range_changed:
+        st.session_state.current_replay_index = replay_dataset.index[last_replay_index]
+        st.session_state.match_range_changed = False
+
+    value = st.slider(
+        "Match",
+        min_value=replay_dataset.index[0],
+        max_value=replay_dataset.index[last_replay_index],
+        value=st.session_state.current_replay_index,
+    )
+    st.session_state.current_replay_index = value
+
+current_row = replay_dataset[
+    replay_dataset.index == st.session_state.current_replay_index
+].iloc[0]
 current_row_player_side = (
     1 if re.match(player_name, current_row["p1_player_name"]) else 2
 )
 replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
-next_match_exist = st.session_state.current_replay_index < (len(replay_dataset) - 1)
-prev_match_exist = st.session_state.current_replay_index > 0
+next_match_exist = (
+    st.session_state.current_replay_index < replay_dataset.index[last_replay_index]
+)
+prev_match_exist = st.session_state.current_replay_index > replay_dataset.index[0]
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
@@ -122,35 +180,16 @@ video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 ###############################################################################################
 # View
 ###############################################################################################
-# In production, users must enter the global password otherwise can't access the page.
-if not replay_viewer_helper.check_password():
-    st.stop()
 
 # -------------------------------------------------------------------
 # st.subheader("Replay", divider=True)
 
-if st.session_state.generate_download_link_clicked:
-    # Fetch the file content
-    response = requests.get(video_path)
-    if response.status_code == 200:
-        # Use st.download_button with the fetched content
-        st.download_button(
-            label="Download replay",
-            data=response.content,
-            file_name="replay.mp4",
-            mime="video/mp4",
-        )
-    else:
-        st.write("Failed to retrieve the file.")
-
-    st.session_state.generate_download_link_clicked = False
-else:
-    st.markdown(
-        f"""
-    <video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
-    """,
-        unsafe_allow_html=True,
-    )
+st.markdown(
+    f"""
+<video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
+""",
+    unsafe_allow_html=True,
+)
 
 # Workaround for the column width issue
 # https://github.com/streamlit/streamlit/issues/5003#issuecomment-1276611218
@@ -218,10 +257,6 @@ col_4.markdown(
     f"<p class='big-font'><a href='{video_path}' download='replay.mp4'>Download replay</a></p>",
     unsafe_allow_html=True,
 )
-
-st.button("Generate download link", on_click=generate_download_link)
-
-st.slider("Match", 0, last_replay_index, key="current_replay_index")
 
 # -------------------------------------------------------------------
 
