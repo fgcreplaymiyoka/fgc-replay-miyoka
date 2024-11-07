@@ -136,6 +136,9 @@ class ReplayUploader(ReplayUploaderBase):
                     g_repeat_mode = False
                     pydirectinput.press("Tab")  # Press Any Button
                 case "MainBh":
+                    self.in_replay = False
+                    tab_repeat_mode = False
+                    g_repeat_mode = False
                     pydirectinput.press("Tab")  # Open menu
                     time.sleep(3)
                 case "News":
@@ -265,7 +268,7 @@ class ReplayUploader(ReplayUploaderBase):
                 case _:
                     pass
 
-            time.sleep(0.2)
+            # time.sleep(0.2)
 
             if tab_repeat_mode:
                 pydirectinput.press("Tab")
