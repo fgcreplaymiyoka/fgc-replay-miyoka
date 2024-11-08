@@ -31,7 +31,7 @@ gcloud run deploy ${service_name} `
     --region ${google_cloud_platform_region} `
     --service-account=${gcp_replay_viewer_service_account} `
     --allow-unauthenticated `
-    --memory=2Gi `
+    --memory=1Gi `
     --set-secrets="/etc/secrets/config.yaml=${secret_id}:latest" `
     --set-env-vars="MIYOKA_CONFIG_PATH=/etc/secrets/config.yaml" `
     --image="${image}" `
