@@ -24,6 +24,9 @@ gcloud secrets add-iam-policy-binding $secret_id `
     --member="serviceAccount:${gcp_replay_viewer_service_account}" `
     --role="roles/secretmanager.secretAccessor"
 
+# Timeout is set to 30 minutes because streamlit uses websocket and Cloud Run sees it as a long-running HTTP requests.
+# Otherwise, the page is reloaded every 5 minutes by default, which restarts a replay randomly.
+# See https://cloud.google.com/run/docs/triggering/websockets for more information
 gcloud run deploy ${service_name} `
     --region ${google_cloud_platform_region} `
     --service-account=${gcp_replay_viewer_service_account} `
@@ -31,5 +34,6 @@ gcloud run deploy ${service_name} `
     --memory=2Gi `
     --set-secrets="/etc/secrets/config.yaml=${secret_id}:latest" `
     --set-env-vars="MIYOKA_CONFIG_PATH=/etc/secrets/config.yaml" `
-    --image="${image}"
+    --image="${image}" `
+    --timeout=30m
 
