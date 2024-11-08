@@ -36,13 +36,11 @@ def load_replay_viewer_helper():
 
 def next_match():
     st.session_state.current_replay_index += 1
-    st.session_state.current_replay_index %= len(replay_dataset)
     st.session_state.current_round_id = 1
 
 
 def prev_match():
     st.session_state.current_replay_index -= 1
-    st.session_state.current_replay_index %= len(replay_dataset)
     st.session_state.current_round_id = 1
 
 
@@ -131,7 +129,7 @@ with st.sidebar:
 
     last_replay_index = len(replay_dataset) - 1
 
-    min_value, max_value = st.slider(
+    min_match_range, max_match_range = st.slider(
         "Match range",
         replay_dataset.index[0],
         replay_dataset.index[last_replay_index],
@@ -143,7 +141,8 @@ with st.sidebar:
     )
 
     replay_dataset = replay_dataset[
-        (replay_dataset.index >= min_value) & (replay_dataset.index <= max_value)
+        (replay_dataset.index >= min_match_range)
+        & (replay_dataset.index <= max_match_range)
     ]
 
     last_replay_index = len(replay_dataset) - 1
@@ -209,14 +208,14 @@ st.write(
 )
 col_1, col_2, col_3, col_4 = st.columns(4)
 
-if next_match_exist:
-    col_1.button("Next match", on_click=next_match)
 if prev_match_exist:
-    col_2.button("Prev match", on_click=prev_match)
-if next_round_exist:
-    col_3.button("Next round", on_click=next_round)
+    col_1.button("Prev match", on_click=prev_match)
+if next_match_exist:
+    col_2.button("Next match", on_click=next_match)
 if prev_round_exist:
-    col_4.button("Prev round", on_click=prev_round)
+    col_3.button("Prev round", on_click=prev_round)
+if next_round_exist:
+    col_4.button("Next round", on_click=next_round)
 
 replay_markdown = """
 |info|player 1|player 2|
@@ -291,8 +290,7 @@ p2_player_dataset = p2_player_dataset[
 )
 player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
 player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
-player_dataset = player_dataset.sort_values(by="played_at")
-player_dataset["match"] = [i for i in range(len(player_dataset))]
+player_dataset = player_dataset.sort_values(by="match")
 
 base_tooltip = ["match", "rank", "character", "played_at"]
 if not should_redact_pii:
@@ -302,7 +300,11 @@ c = (
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
-        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
+        x=alt.X(
+            "match:Q",
+            scale=alt.Scale(domain=[min_match_range, max_match_range]),
+            title=None,
+        ),
         y={"field": "lp", "type": "quantitative"},
         tooltip=["lp"] + base_tooltip,
         color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
@@ -346,7 +348,11 @@ st.altair_chart(
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
-        x=alt.X("match:Q", scale=alt.Scale(domain=[0, last_replay_index]), title=None),
+        x=alt.X(
+            "match:Q",
+            scale=alt.Scale(domain=[min_match_range, max_match_range]),
+            title=None,
+        ),
         y=alt.Y("mr:Q", title=None).scale(domain=(500, 2500)),
         tooltip=["mr"] + base_tooltip,
         color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
