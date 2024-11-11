@@ -307,7 +307,11 @@ c = (
         ),
         y={"field": "lp", "type": "quantitative"},
         tooltip=["lp"] + base_tooltip,
-        color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
+        color=alt.Color(
+            "character:N",
+            legend=alt.Legend(orient="bottom"),
+            scale=alt.Scale(scheme="set3"),
+        ),
     )
 )
 
@@ -353,9 +357,13 @@ st.altair_chart(
             scale=alt.Scale(domain=[min_match_range, max_match_range]),
             title=None,
         ),
-        y=alt.Y("mr:Q", title=None).scale(domain=(500, 2500)),
+        y=alt.Y("mr:Q", title=None).scale(domain=(1000, 2000)),
         tooltip=["mr"] + base_tooltip,
-        color=alt.Color("character:N", legend=alt.Legend(orient="bottom")),
+        color=alt.Color(
+            "character:N",
+            legend=alt.Legend(orient="bottom"),
+            scale=alt.Scale(scheme="set3"),
+        ),
     ),
     use_container_width=True,
 )
@@ -364,16 +372,36 @@ st.altair_chart(
 
 st.subheader("Daily result", divider=True)
 
-c = (
-    alt.Chart(player_dataset)
-    .mark_bar()
+rules = (
+    alt.Chart(
+        pd.DataFrame(
+            {"result": [0.5]},
+        )
+    )
+    .mark_rule()
     .encode(
-        x=alt.X("utcmonthdate(played_at):O", title=None),
-        y=alt.Y("result", aggregate="count", title=None),
-        color=alt.Color("result", legend=alt.Legend(orient="bottom")),
+        alt.Y("result:Q", title=None),
+        color=alt.value("#224455"),
+        opacity=alt.value(0.3),
     )
 )
-st.altair_chart(c, use_container_width=True)
+
+c = (
+    alt.Chart(player_dataset)
+    .mark_bar(cornerRadius=5)
+    .encode(
+        x=alt.X("utcmonthdate(played_at):O", title=None),
+        y=alt.Y("result", aggregate="count", title=None).stack("normalize"),
+        color=alt.Color(
+            "result",
+            legend=alt.Legend(orient="bottom"),
+            scale=alt.Scale(
+                scheme="pastel2", domain=["wins", "loses"], range=["#b3e2cd", "#fdcdac"]
+            ),
+        ),
+    )
+)
+st.altair_chart(c + rules, use_container_width=True)
 
 # -------------------------------------------------------------------
 
