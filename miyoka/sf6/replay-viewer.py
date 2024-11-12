@@ -412,6 +412,13 @@ option = st.selectbox(
     ("Daily", "Weekly", "Monthly", "Yearly"),
 )
 
+interval_mapping = {
+    "Daily": "D",
+    "Weekly": "W",
+    "Monthly": "ME",
+    "Yearly": "YE",
+}
+
 p1_opponent_dataset = replay_dataset[
     ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
@@ -436,11 +443,11 @@ p2_opponent_dataset = p2_opponent_dataset[
 )
 opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
 opponent_dataset_total = opponent_dataset.groupby(
-    [pd.Grouper(key="played_at", freq=option[0]), "character"]
+    [pd.Grouper(key="played_at", freq=interval_mapping[option]), "character"]
 ).count()
 opponent_dataset_loses = (
     opponent_dataset.query("result == 'loses'")
-    .groupby([pd.Grouper(key="played_at", freq=option[0]), "character"])
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[option]), "character"])
     .count()
 )
 
@@ -461,7 +468,7 @@ c = (
         y=alt.Y("character", title=None),
         color=alt.Color(
             "wins_rate",
-            legend=alt.Legend(orient="bottom"),
+            legend=alt.Legend(orient="bottom", format=".0%"),
             scale=alt.Scale(scheme="redyellowgreen", domainMid=0.5),
         ),
     )
