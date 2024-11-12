@@ -405,7 +405,12 @@ st.altair_chart(c + rules, use_container_width=True)
 
 # -------------------------------------------------------------------
 
-st.subheader("Opponent characters", divider=True)
+st.subheader("Result by character", divider=True)
+
+option = st.selectbox(
+    "Interval",
+    ("Daily", "Weekly", "Monthly", "Yearly"),
+)
 
 p1_opponent_dataset = replay_dataset[
     ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
@@ -413,28 +418,52 @@ p1_opponent_dataset = replay_dataset[
 p2_opponent_dataset = replay_dataset[
     ~replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
 ]
-p1_opponent_dataset = p1_opponent_dataset[["p1_character", "played_at"]].rename(
+p1_opponent_dataset = p1_opponent_dataset[
+    ["p1_character", "p1_result", "played_at"]
+].rename(
     columns={
         "p1_character": "character",
+        "p1_result": "result",
     }
 )
-p2_opponent_dataset = p2_opponent_dataset[["p2_character", "played_at"]].rename(
+p2_opponent_dataset = p2_opponent_dataset[
+    ["p2_character", "p2_result", "played_at"]
+].rename(
     columns={
         "p2_character": "character",
+        "p2_result": "result",
     }
 )
 opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
-opponent_dataset = opponent_dataset.reset_index().rename(columns={"index": "match"})
-opponent_dataset = opponent_dataset.sort_values(by="played_at")
-opponent_dataset["match"] = [i for i in range(len(opponent_dataset))]
+opponent_dataset_total = opponent_dataset.groupby(
+    [pd.Grouper(key="played_at", freq=option[0]), "character"]
+).count()
+opponent_dataset_loses = (
+    opponent_dataset.query("result == 'loses'")
+    .groupby([pd.Grouper(key="played_at", freq=option[0]), "character"])
+    .count()
+)
+
+opponent_dataset_div = (
+    opponent_dataset_loses.div(opponent_dataset_total)
+    .round(2)
+    .rename(columns={"result": "wins"})
+    .add_suffix("_rate")
+    .fillna(0.0)
+    .reset_index()
+)
 
 c = (
-    alt.Chart(opponent_dataset)
+    alt.Chart(opponent_dataset_div)
     .mark_rect()
     .encode(
         x=alt.X("utcmonthdate(played_at):O", title=None),
         y=alt.Y("character", title=None),
-        color=alt.Color("count():Q", legend=alt.Legend(orient="bottom")),
+        color=alt.Color(
+            "wins_rate",
+            legend=alt.Legend(orient="bottom"),
+            scale=alt.Scale(scheme="redyellowgreen", domainMid=0.5),
+        ),
     )
 )
 st.altair_chart(c, use_container_width=True)
