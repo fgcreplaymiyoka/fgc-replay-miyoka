@@ -10,6 +10,7 @@ from miyoka.container import Container
 import altair as alt
 import re
 import numpy
+from datetime import datetime, timedelta
 
 ###############################################################################################
 # Functions
@@ -67,6 +68,10 @@ def render_current_row_value(key: str) -> str:
     return value
 
 
+def play_date_range_changed():
+    st.session_state.play_date_range_changed = True
+
+
 def match_range_changed():
     st.session_state.match_range_changed = True
 
@@ -94,13 +99,11 @@ last_replay_index = replay_dataset.index[len(replay_dataset) - 1]
 if "current_replay_index" not in st.session_state:
     st.session_state.current_replay_index = last_replay_index
 
-if "current_played_after" not in st.session_state:
-    st.session_state.current_played_after = replay_dataset.iloc[0][
-        "played_at"
-    ].to_pydatetime()
-
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
+
+if "play_date_range_changed" not in st.session_state:
+    st.session_state.play_date_range_changed = True
 
 if "match_range_changed" not in st.session_state:
     st.session_state.match_range_changed = True
@@ -117,6 +120,26 @@ if not replay_viewer_helper.check_password():
 ###############################################################################################
 
 with st.sidebar:
+    option = st.selectbox(
+        "Played after:",
+        ("All", "Last 1 day", "Last 2 days", "Last 7 days"),
+        on_change=play_date_range_changed,
+    )
+
+    if st.session_state.play_date_range_changed:
+        if option == "All":
+            st.session_state.current_played_after = replay_dataset.iloc[0][
+                "played_at"
+            ].to_pydatetime()
+        elif option == "Last 1 day":
+            st.session_state.current_played_after = datetime.now() - timedelta(days=1)
+        elif option == "Last 2 days":
+            st.session_state.current_played_after = datetime.now() - timedelta(days=2)
+        elif option == "Last 7 days":
+            st.session_state.current_played_after = datetime.now() - timedelta(days=7)
+
+        st.session_state.play_date_range_changed = False
+
     played_after = st.slider(
         "Played after:",
         value=st.session_state.current_played_after,
@@ -147,7 +170,6 @@ with st.sidebar:
 
     last_replay_index = len(replay_dataset) - 1
 
-    # st.write(last_replay_index)
     if st.session_state.match_range_changed:
         st.session_state.current_replay_index = replay_dataset.index[last_replay_index]
         st.session_state.match_range_changed = False
