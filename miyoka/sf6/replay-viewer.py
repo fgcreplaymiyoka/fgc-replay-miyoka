@@ -364,13 +364,16 @@ text = (
     .encode(alt.Y("lp:Q", title=None), text="rank", opacity=alt.value(0.3))
 )
 
-st.altair_chart(c + rules + text, use_container_width=True)
+if player_dataset["lp"].isnull().all():
+    st.write("No data available.")
+else:
+    st.altair_chart(c + rules + text, use_container_width=True)
 
 # -------------------------------------------------------------------
 
 st.subheader("Master League", divider=True)
 
-st.altair_chart(
+c = (
     alt.Chart(player_dataset)
     .mark_bar(clip=True)
     .encode(
@@ -386,9 +389,13 @@ st.altair_chart(
             legend=alt.Legend(orient="bottom"),
             scale=alt.Scale(scheme="set3"),
         ),
-    ),
-    use_container_width=True,
+    )
 )
+
+if player_dataset["mr"].isnull().all():
+    st.write("No data available.")
+else:
+    st.altair_chart(c, use_container_width=True)
 
 # -------------------------------------------------------------------
 
