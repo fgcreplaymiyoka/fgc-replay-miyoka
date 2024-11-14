@@ -147,4 +147,4 @@ log:
   file_name: miyoka.log
   standard_output: true
   file_output: true
-  clear_everytime: true
+  clear_everytime: false
