@@ -76,6 +76,10 @@ def match_range_changed():
     st.session_state.match_range_changed = True
 
 
+def highlight_cols(s):
+    return "font-weight: bold"
+
+
 ###############################################################################################
 # Initialization
 ###############################################################################################
@@ -230,34 +234,53 @@ st.write(
 )
 col_1, col_2, col_3, col_4 = st.columns(4)
 
-if prev_match_exist:
-    col_1.button("Prev match", on_click=prev_match)
-if next_match_exist:
-    col_2.button("Next match", on_click=next_match)
-if prev_round_exist:
-    col_3.button("Prev round", on_click=prev_round)
-if next_round_exist:
-    col_4.button("Next round", on_click=next_round)
+col_1.button("Prev match", on_click=prev_match, disabled=not prev_match_exist)
+col_2.button("Prev round", on_click=prev_round, disabled=not prev_round_exist)
+col_3.button("Next round", on_click=next_round, disabled=not next_round_exist)
+col_4.button("Next match", on_click=next_match, disabled=not next_match_exist)
 
 replay_markdown = """
 |info|player 1|player 2|
 |---|---|---|"""
 
+metadata = {"info": [], "player 1": [], "player 2": []}
+
 if not should_redact_pii:
-    replay_markdown += f"""
-|name|{render_current_row_value('p1_player_name')}|{render_current_row_value('p2_player_name')}|"""
+    metadata["info"].append("name")
+    metadata["player 1"].append(current_row["p1_player_name"])
+    metadata["player 2"].append(current_row["p2_player_name"])
 
-replay_markdown += f"""
-|character|{render_current_row_value('p1_character')}|{render_current_row_value('p2_character')}|
-|mode|{render_current_row_value('p1_mode')}|{render_current_row_value('p2_mode')}|
-|result|{render_current_row_value('p1_result')}|{render_current_row_value('p2_result')}|
-|round result|{render_current_row_value('p1_round_results')}|{render_current_row_value('p2_round_results')}|
-|lp|{render_current_row_value('p1_lp')}|{render_current_row_value('p2_lp')}|
-|mr|{render_current_row_value('p1_mr')}|{render_current_row_value('p2_mr')}|
-|rank|{render_current_row_value('p1_rank')}|{render_current_row_value('p2_rank')}|
-"""
+metadata["info"].extend(["character", "mode", "result", "rounds", "lp", "mr", "rank"])
+metadata["player 1"].extend(
+    [
+        current_row["p1_character"],
+        current_row["p1_mode"],
+        current_row["p1_result"],
+        ",".join(current_row["p1_round_results"]),
+        str(current_row["p1_lp"]),
+        str(current_row["p1_mr"]),
+        current_row["p1_rank"],
+    ]
+)
+metadata["player 2"].extend(
+    [
+        current_row["p2_character"],
+        current_row["p2_mode"],
+        current_row["p2_result"],
+        ",".join(current_row["p2_round_results"]),
+        str(current_row["p2_lp"]),
+        str(current_row["p2_mr"]),
+        current_row["p2_rank"],
+    ]
+)
 
-st.markdown(replay_markdown)
+metadata_df = pd.DataFrame(data=metadata)
+metadata_df = metadata_df.reset_index(drop=True).set_index(metadata_df.columns[0])
+
+metadata_df = metadata_df.style.map(
+    highlight_cols, subset=pd.IndexSlice[:, [f"player {current_row_player_side}"]]
+)
+st.table(metadata_df)
 
 col_1, col_2, col_3, col_4 = st.columns(4)
 
