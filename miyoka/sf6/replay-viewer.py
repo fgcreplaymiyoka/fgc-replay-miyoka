@@ -124,10 +124,19 @@ if not replay_viewer_helper.check_password():
 ###############################################################################################
 
 with st.sidebar:
+    played_after_mapping = {
+        "Last 1 day": 1,
+        "Last 2 days": 2,
+        "Last 7 days": 7,
+        "Last 14 days": 14,
+        "Last 30 days": 30,
+    }
+
     option = st.selectbox(
         "Played after:",
-        ("All", "Last 1 day", "Last 2 days", "Last 7 days"),
+        (*played_after_mapping, "All"),
         on_change=play_date_range_changed,
+        index=len(played_after_mapping) - 1,
     )
 
     if st.session_state.play_date_range_changed:
@@ -135,12 +144,8 @@ with st.sidebar:
             st.session_state.current_played_after = replay_dataset.iloc[0][
                 "played_at"
             ].to_pydatetime()
-        elif option == "Last 1 day":
-            st.session_state.current_played_after = datetime.now() - timedelta(days=1)
-        elif option == "Last 2 days":
-            st.session_state.current_played_after = datetime.now() - timedelta(days=2)
-        elif option == "Last 7 days":
-            st.session_state.current_played_after = datetime.now() - timedelta(days=7)
+        else:
+            st.session_state.current_played_after = datetime.now() - timedelta(days=played_after_mapping[option])
 
         st.session_state.play_date_range_changed = False
 
