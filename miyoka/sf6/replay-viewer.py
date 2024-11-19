@@ -124,6 +124,8 @@ if not replay_viewer_helper.check_password():
 ###############################################################################################
 
 with st.sidebar:
+    st.subheader("Filters", divider=True)
+
     played_after_mapping = {
         "Last 1 day": 1,
         "Last 2 days": 2,
@@ -132,7 +134,7 @@ with st.sidebar:
         "Last 30 days": 30,
     }
 
-    option = st.selectbox(
+    played_after_option = st.selectbox(
         "Played after:",
         (*played_after_mapping, "All"),
         on_change=play_date_range_changed,
@@ -140,12 +142,12 @@ with st.sidebar:
     )
 
     if st.session_state.play_date_range_changed:
-        if option == "All":
+        if played_after_option == "All":
             st.session_state.current_played_after = replay_dataset.iloc[0][
                 "played_at"
             ].to_pydatetime()
         else:
-            st.session_state.current_played_after = datetime.now() - timedelta(days=played_after_mapping[option])
+            st.session_state.current_played_after = datetime.now() - timedelta(days=played_after_mapping[played_after_option])
 
         st.session_state.play_date_range_changed = False
 
@@ -190,6 +192,20 @@ with st.sidebar:
         value=st.session_state.current_replay_index,
     )
     st.session_state.current_replay_index = value
+
+    st.subheader("Stats", divider=True)
+    
+    interval_option = st.selectbox(
+        "Interval",
+        ("Daily", "Weekly", "Monthly", "Yearly"),
+    )
+
+    interval_mapping = {
+        "Daily": "D",
+        "Weekly": "W",
+        "Monthly": "ME",
+        "Yearly": "YE",
+    }
 
 current_row = replay_dataset[
     replay_dataset.index == st.session_state.current_replay_index
@@ -427,7 +443,7 @@ else:
 
 # -------------------------------------------------------------------
 
-st.subheader("Daily result", divider=True)
+st.subheader("Result", divider=True)
 
 rules = (
     alt.Chart(
@@ -464,18 +480,6 @@ st.altair_chart(c + rules, use_container_width=True)
 
 st.subheader("Result by character", divider=True)
 
-option = st.selectbox(
-    "Interval",
-    ("Daily", "Weekly", "Monthly", "Yearly"),
-)
-
-interval_mapping = {
-    "Daily": "D",
-    "Weekly": "W",
-    "Monthly": "ME",
-    "Yearly": "YE",
-}
-
 p1_opponent_dataset = replay_dataset[
     ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
@@ -500,11 +504,11 @@ p2_opponent_dataset = p2_opponent_dataset[
 )
 opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
 opponent_dataset_total = opponent_dataset.groupby(
-    [pd.Grouper(key="played_at", freq=interval_mapping[option]), "character"]
+    [pd.Grouper(key="played_at", freq=interval_mapping[interval_option]), "character"]
 ).count()
 opponent_dataset_loses = (
     opponent_dataset.query("result == 'loses'")
-    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[option]), "character"])
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option]), "character"])
     .count()
 )
 
