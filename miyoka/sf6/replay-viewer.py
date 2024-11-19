@@ -147,7 +147,9 @@ with st.sidebar:
                 "played_at"
             ].to_pydatetime()
         else:
-            st.session_state.current_played_after = datetime.now() - timedelta(days=played_after_mapping[played_after_option])
+            st.session_state.current_played_after = datetime.now() - timedelta(
+                days=played_after_mapping[played_after_option]
+            )
 
         st.session_state.play_date_range_changed = False
 
@@ -193,8 +195,8 @@ with st.sidebar:
     )
     st.session_state.current_replay_index = value
 
-    st.subheader("Stats", divider=True)
-    
+    st.subheader("Aggregate", divider=True)
+
     interval_option = st.selectbox(
         "Interval",
         ("Daily", "Weekly", "Monthly", "Yearly"),
@@ -459,17 +461,39 @@ rules = (
     )
 )
 
+result_dataset_total = player_dataset.groupby(
+    [pd.Grouper(key="played_at", freq=interval_mapping[interval_option])]
+).count()
+result_dataset_wins = (
+    player_dataset.query("result == 'wins'")
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .count()
+)
+
+result_dataset_div = (
+    result_dataset_wins.div(result_dataset_total)
+    .round(2)
+    .rename(columns={"result": "wins"})
+    .add_suffix("_rate")
+    .reset_index()
+)
+
 c = (
-    alt.Chart(player_dataset)
+    alt.Chart(result_dataset_div)
     .mark_bar(cornerRadius=5)
     .encode(
-        x=alt.X("utcmonthdate(played_at):O", title=None),
-        y=alt.Y("result", aggregate="count", title=None).stack("normalize"),
+        x=alt.X("monthdate(played_at):O", title=None),
+        y=alt.Y(
+            "wins_rate:Q",
+            title=None,
+            axis=alt.Axis(format=".0%"),
+            scale=alt.Scale(domain=(0.0, 1.0)),
+        ),
         color=alt.Color(
-            "result",
-            legend=alt.Legend(orient="bottom"),
+            "wins_rate",
+            legend=alt.Legend(orient="bottom", format=".0%"),
             scale=alt.Scale(
-                scheme="pastel2", domain=["wins", "loses"], range=["#b3e2cd", "#fdcdac"]
+                scheme="redyellowgreen", domainMid=0.5, domainMin=0.0, domainMax=1.0
             ),
         ),
     )
@@ -508,7 +532,12 @@ opponent_dataset_total = opponent_dataset.groupby(
 ).count()
 opponent_dataset_loses = (
     opponent_dataset.query("result == 'loses'")
-    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option]), "character"])
+    .groupby(
+        [
+            pd.Grouper(key="played_at", freq=interval_mapping[interval_option]),
+            "character",
+        ]
+    )
     .count()
 )
 
@@ -525,12 +554,14 @@ c = (
     alt.Chart(opponent_dataset_div)
     .mark_rect()
     .encode(
-        x=alt.X("utcmonthdate(played_at):O", title=None),
+        x=alt.X("monthdate(played_at):O", title=None),
         y=alt.Y("character", title=None),
         color=alt.Color(
             "wins_rate",
             legend=alt.Legend(orient="bottom", format=".0%"),
-            scale=alt.Scale(scheme="redyellowgreen", domainMid=0.5),
+            scale=alt.Scale(
+                scheme="redyellowgreen", domainMid=0.5, domainMin=0.0, domainMax=1.0
+            ),
         ),
     )
 )
