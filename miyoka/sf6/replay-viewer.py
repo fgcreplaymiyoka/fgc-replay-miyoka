@@ -564,6 +564,8 @@ st.altair_chart(c + rules, use_container_width=True)
 
 st.subheader("Result by character", divider=True)
 
+tab_win_rate, tab_match_count = st.tabs(["Win rate", "Match count"])
+
 p1_opponent_dataset = replay_dataset[
     ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
 ]
@@ -610,7 +612,7 @@ opponent_dataset_div = (
     .reset_index()
 )
 
-c = (
+result_by_character_win_rate_chart = (
     alt.Chart(opponent_dataset_div)
     .mark_rect()
     .encode(
@@ -625,7 +627,23 @@ c = (
         ),
     )
 )
-st.altair_chart(c, use_container_width=True)
+
+opponent_dataset_total = opponent_dataset_total.reset_index()
+
+result_by_character_match_count_chart = (
+    alt.Chart(opponent_dataset_total)
+    .mark_rect(clip=True)
+    .encode(
+        x=alt.X("monthdate(played_at):O", title=None),
+        y=alt.Y("character:N", title=None),
+        color=alt.Color("result:Q", legend=alt.Legend(orient="bottom")),
+    )
+)
+
+with tab_win_rate:
+    st.altair_chart(result_by_character_win_rate_chart, use_container_width=True)
+with tab_match_count:
+    st.altair_chart(result_by_character_match_count_chart, use_container_width=True)
 
 # -------------------------------------------------------------------
 
