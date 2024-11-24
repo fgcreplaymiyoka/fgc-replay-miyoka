@@ -382,12 +382,41 @@ else:
 
 st.subheader("Result", divider=True)
 
-st.altair_chart(
-    replay_viewer_helper.get_chart_result(
-        player_dataset, interval_mapping, interval_option
-    ),
-    use_container_width=True,
+tab_win_rate, tab_match_count = st.tabs(["Win rate", "Match count"])
+
+result_dataset_total = (
+    player_dataset[["played_at", "result"]]
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .count()
 )
+result_dataset_wins = (
+    player_dataset[["played_at", "result"]]
+    .query("result == 'wins'")
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .count()
+)
+
+result_dataset_div = (
+    result_dataset_wins.div(result_dataset_total)
+    .round(2)
+    .rename(columns={"result": "wins"})
+    .add_suffix("_rate")
+    .reset_index()
+)
+
+result_dataset_total = result_dataset_total.reset_index()
+result_dataset_total.replace(0, numpy.nan, inplace=True)
+
+with tab_win_rate:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_win_rate(result_dataset_div),
+        use_container_width=True,
+    )
+with tab_match_count:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_match_count(result_dataset_total),
+        use_container_width=True,
+    )
 
 # -------------------------------------------------------------------
 

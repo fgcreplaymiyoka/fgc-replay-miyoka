@@ -310,7 +310,7 @@ class ReplayViewerHelper:
             )
         )
 
-    def get_chart_result(self, player_dataset, interval_mapping, interval_option):
+    def get_chart_result_win_rate(self, result_dataset_div):
         rules = (
             alt.Chart(
                 pd.DataFrame(
@@ -323,30 +323,6 @@ class ReplayViewerHelper:
                 color=alt.value("#224455"),
                 opacity=alt.value(0.3),
             )
-        )
-
-        result_dataset_total = (
-            player_dataset[["played_at", "result"]]
-            .groupby(
-                [pd.Grouper(key="played_at", freq=interval_mapping[interval_option])]
-            )
-            .count()
-        )
-        result_dataset_wins = (
-            player_dataset[["played_at", "result"]]
-            .query("result == 'wins'")
-            .groupby(
-                [pd.Grouper(key="played_at", freq=interval_mapping[interval_option])]
-            )
-            .count()
-        )
-
-        result_dataset_div = (
-            result_dataset_wins.div(result_dataset_total)
-            .round(2)
-            .rename(columns={"result": "wins"})
-            .add_suffix("_rate")
-            .reset_index()
         )
 
         c = (
@@ -373,3 +349,13 @@ class ReplayViewerHelper:
             )
         )
         return c + rules
+
+    def get_chart_result_match_count(self, result_dataset_total):
+        return (
+            alt.Chart(result_dataset_total)
+            .mark_rect(clip=True)
+            .encode(
+                x=alt.X("monthdate(played_at):O", title=None),
+                y=alt.Y("result:Q", title=None),
+            )
+        )
