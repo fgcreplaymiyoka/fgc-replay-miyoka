@@ -37,55 +37,29 @@ Community contributions are welcome to support more fighting games.
 ### Setup Miyoka
 
 1. [Download Miyoka](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases).
+1. Install [Python 3.11.3](https://www.python.org/downloads/windows/).
+1. Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx), which is a package manager for python projects.
+1. Install dependencies of Miyoka:
+    1. [Open a **Command Prompt**](https://www.wikihow.com/Open-the-Command-Prompt-in-Windows#:~:text=Open%20the%20%22Start%22%20menu%20and,%22%20and%20press%20%22Enter%22.) in your windows.
+    1. [Change the current directory](https://www.geeksforgeeks.org/change-directories-in-command-prompt/) to the downloaded Miyoka project. e.g.
+        ```shell
+        cd fgc-replay-miyoka
+        ```
+    1. Install dependencies via poetry:
+        ```shell
+        poetry install --with win
+        ```
 1. Right-click on the `miyoka/setup.ps1` file and select "Run with PowerShell".
     Alternatively, you can open Windows Powershell and execute the following command:
     ```
     powershell.exe -executionpolicy bypass -file .\setup.ps1
     ```
-
-<details>
-<summary>Explanation:</summary>
-
-TODO: In the script:
-
-Update `config.yaml` file. This contains all of the information for your Miyoka server. Do **NOT** share it with someone else since it contains secrets.
-
-Install python dependencies:
-```
-cd fgc-replay-miyoka
-poetry install --with win
-```
-
-Create the configuration file
-
-Run the following command to create `config.yaml` file.
-
-```
-make create-config
-```
-
-And, update the `<required>` fields in the `config.yaml` file.
-
-This contains all of the information for your Miyoka server. Do **NOT** share it with someone else since it contains secrets.
-
-(To be removed) Install dependencies:
-
-- [Python 3.11.3](https://www.python.org/downloads/windows/)
-- [poetry](https://python-poetry.org/docs/#installing-with-pipx)
-- GNU make https://gnuwin32.sourceforge.net/packages/make.htm (To be deprecated)
-
-Login to Google Cloud Platform:
-
-Launch a command prompt and run the following commands (Replace `<your-gcp-project-name>`):
-
-```shell
-gcloud auth application-default login
-gcloud auth application-default set-quota-project <your-gcp-project-name>
-gcloud config set project <your-gcp-project-name>
-```
-
-Deploy Replay Viewer to Cloud Run:
-</details>
+    This command creates a `config.yaml` file in your Miyoka folder, which
+    contains all of the information for your Miyoka server.
+    Do **NOT** share it with someone else since it contains secrets.
+1. Update the config file `config.yaml` based on your personal information.
+   Most of the fields are pre-filled by `setup.ps1` script,
+   and you need to complete the rest of the `<required>` fields manually. e.g. `player_name`
 
 ### Setup OBS
 

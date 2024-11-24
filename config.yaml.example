@@ -87,7 +87,7 @@ gcp:
       name:
 replay_uploader:
   # Your user code of the game. Replay Uploader crawls your replays in the game UI with this ID.
-  user_code: <replay_uploader.user_code>
+  user_code: <required>
   # "schedule" ... Schedule analyze job in Cloud Run. You must deploy analyzer in Cloud Run Job beforehand.
   # "inline" ... Execute analyzer in the replay uploader.
   # "skip" ... Skip analyzer execution.
@@ -135,8 +135,8 @@ replay_viewer:
   password:
   # If true, additional information is visibile on the viewer for debugging purpose.
   debug_mode: false
-  # Player name of your game account
-  player_name:
+  # Player name of your game account.
+  player_name: <required>
   # Replay dataset after the specified time ago is displayed. e.g. 30 days
   time_range:
   # Replay dataset after the specific date time is displayed. e.g. 2024-01-01 00:00:00
