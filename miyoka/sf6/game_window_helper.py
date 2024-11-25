@@ -216,7 +216,7 @@ class GameWindowHelper(GameWindowHelperBase):
         return played_at
 
     def identify_result(self, image, player):
-        p1_roi = (458, 315, 78, 29)
+        p1_roi = (458, 315, 82, 29)
 
         if player == "p1":
             roi = p1_roi
