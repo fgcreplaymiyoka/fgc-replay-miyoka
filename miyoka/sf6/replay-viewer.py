@@ -76,6 +76,10 @@ def match_range_changed():
     st.session_state.match_range_changed = True
 
 
+def highlight_cols(s):
+    return "font-weight: bold"
+
+
 ###############################################################################################
 # Initialization
 ###############################################################################################
@@ -120,23 +124,32 @@ if not replay_viewer_helper.check_password():
 ###############################################################################################
 
 with st.sidebar:
-    option = st.selectbox(
+    st.subheader("Filters")
+
+    played_after_mapping = {
+        "Last 1 day": 1,
+        "Last 2 days": 2,
+        "Last 7 days": 7,
+        "Last 14 days": 14,
+        "Last 30 days": 30,
+    }
+
+    played_after_option = st.selectbox(
         "Played after:",
-        ("All", "Last 1 day", "Last 2 days", "Last 7 days"),
+        (*played_after_mapping, "All"),
         on_change=play_date_range_changed,
+        index=len(played_after_mapping) - 1,
     )
 
     if st.session_state.play_date_range_changed:
-        if option == "All":
+        if played_after_option == "All":
             st.session_state.current_played_after = replay_dataset.iloc[0][
                 "played_at"
             ].to_pydatetime()
-        elif option == "Last 1 day":
-            st.session_state.current_played_after = datetime.now() - timedelta(days=1)
-        elif option == "Last 2 days":
-            st.session_state.current_played_after = datetime.now() - timedelta(days=2)
-        elif option == "Last 7 days":
-            st.session_state.current_played_after = datetime.now() - timedelta(days=7)
+        else:
+            st.session_state.current_played_after = datetime.now() - timedelta(
+                days=played_after_mapping[played_after_option]
+            )
 
         st.session_state.play_date_range_changed = False
 
@@ -182,6 +195,20 @@ with st.sidebar:
     )
     st.session_state.current_replay_index = value
 
+    st.subheader("Aggregation")
+
+    interval_option = st.selectbox(
+        "Interval",
+        ("Daily", "Weekly", "Monthly", "Yearly"),
+    )
+
+    interval_mapping = {
+        "Daily": "D",
+        "Weekly": "W",
+        "Monthly": "ME",
+        "Yearly": "YE",
+    }
+
 current_row = replay_dataset[
     replay_dataset.index == st.session_state.current_replay_index
 ].iloc[0]
@@ -203,7 +230,7 @@ video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 ###############################################################################################
 
 # -------------------------------------------------------------------
-# st.subheader("Replay", divider=True)
+st.subheader("Replay", divider=True)
 
 st.markdown(
     f"""
@@ -230,34 +257,49 @@ st.write(
 )
 col_1, col_2, col_3, col_4 = st.columns(4)
 
-if prev_match_exist:
-    col_1.button("Prev match", on_click=prev_match)
-if next_match_exist:
-    col_2.button("Next match", on_click=next_match)
-if prev_round_exist:
-    col_3.button("Prev round", on_click=prev_round)
-if next_round_exist:
-    col_4.button("Next round", on_click=next_round)
+col_1.button("Prev match", on_click=prev_match, disabled=not prev_match_exist)
+col_2.button("Prev round", on_click=prev_round, disabled=not prev_round_exist)
+col_3.button("Next round", on_click=next_round, disabled=not next_round_exist)
+col_4.button("Next match", on_click=next_match, disabled=not next_match_exist)
 
-replay_markdown = """
-|info|player 1|player 2|
-|---|---|---|"""
+metadata = {"info": [], "player 1": [], "player 2": []}
 
 if not should_redact_pii:
-    replay_markdown += f"""
-|name|{render_current_row_value('p1_player_name')}|{render_current_row_value('p2_player_name')}|"""
+    metadata["info"].append("name")
+    metadata["player 1"].append(current_row["p1_player_name"])
+    metadata["player 2"].append(current_row["p2_player_name"])
 
-replay_markdown += f"""
-|character|{render_current_row_value('p1_character')}|{render_current_row_value('p2_character')}|
-|mode|{render_current_row_value('p1_mode')}|{render_current_row_value('p2_mode')}|
-|result|{render_current_row_value('p1_result')}|{render_current_row_value('p2_result')}|
-|round result|{render_current_row_value('p1_round_results')}|{render_current_row_value('p2_round_results')}|
-|lp|{render_current_row_value('p1_lp')}|{render_current_row_value('p2_lp')}|
-|mr|{render_current_row_value('p1_mr')}|{render_current_row_value('p2_mr')}|
-|rank|{render_current_row_value('p1_rank')}|{render_current_row_value('p2_rank')}|
-"""
+metadata["info"].extend(["character", "mode", "result", "rounds", "lp", "mr", "rank"])
+metadata["player 1"].extend(
+    [
+        current_row["p1_character"],
+        current_row["p1_mode"],
+        current_row["p1_result"],
+        ",".join(current_row["p1_round_results"]),
+        str(current_row["p1_lp"]),
+        str(current_row["p1_mr"]),
+        current_row["p1_rank"],
+    ]
+)
+metadata["player 2"].extend(
+    [
+        current_row["p2_character"],
+        current_row["p2_mode"],
+        current_row["p2_result"],
+        ",".join(current_row["p2_round_results"]),
+        str(current_row["p2_lp"]),
+        str(current_row["p2_mr"]),
+        current_row["p2_rank"],
+    ]
+)
 
-st.markdown(replay_markdown)
+metadata_df = pd.DataFrame(data=metadata)
+metadata_df = metadata_df.reset_index(drop=True).set_index(metadata_df.columns[0])
+
+metadata_df = metadata_df.style.map(
+    highlight_cols, subset=pd.IndexSlice[:, [f"player {current_row_player_side}"]]
+)
+st.table(metadata_df)
 
 col_1, col_2, col_3, col_4 = st.columns(4)
 
@@ -281,202 +323,122 @@ col_4.markdown(
 
 # -------------------------------------------------------------------
 
-st.subheader("Road to Master", divider=True)
-p1_player_dataset = replay_dataset[
-    replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
-]
-p2_player_dataset = replay_dataset[
-    replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
-]
-p1_player_dataset = p1_player_dataset[
-    ["p1_rank", "p1_lp", "p1_mr", "p1_result", "p1_character", "replay_id", "played_at"]
-].rename(
-    columns={
-        "p1_rank": "rank",
-        "p1_lp": "lp",
-        "p1_mr": "mr",
-        "p1_result": "result",
-        "p1_character": "character",
-    }
-)
-p2_player_dataset = p2_player_dataset[
-    ["p2_rank", "p2_lp", "p2_mr", "p2_result", "p2_character", "replay_id", "played_at"]
-].rename(
-    columns={
-        "p2_rank": "rank",
-        "p2_lp": "lp",
-        "p2_mr": "mr",
-        "p2_result": "result",
-        "p2_character": "character",
-    }
-)
-player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
-player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
-player_dataset = player_dataset.sort_values(by="match")
-
+player_dataset = replay_viewer_helper.get_player_dataset(replay_dataset, player_name)
 base_tooltip = ["match", "rank", "character", "played_at"]
 if not should_redact_pii:
     base_tooltip.append("replay_id")
 
-c = (
-    alt.Chart(player_dataset)
-    .mark_bar(clip=True)
-    .encode(
-        x=alt.X(
-            "match:Q",
-            scale=alt.Scale(domain=[min_match_range, max_match_range]),
-            title=None,
-        ),
-        y={"field": "lp", "type": "quantitative"},
-        tooltip=["lp"] + base_tooltip,
-        color=alt.Color(
-            "character:N",
-            legend=alt.Legend(orient="bottom"),
-            scale=alt.Scale(scheme="set3"),
-        ),
-    )
-)
+# -------------------------------------------------------------------
 
-thresholds = pd.DataFrame(
-    [
-        {"lp": 25000, "rank": "master"},
-        {"lp": 19000, "rank": "diamond"},
-        {"lp": 13000, "rank": "platinum"},
-        {"lp": 9000, "rank": "gold"},
-        {"lp": 5000, "rank": "silver"},
-        {"lp": 3000, "rank": "bronze"},
-        {"lp": 1000, "rank": "iron"},
-        {"lp": 0, "rank": "rookie"},
-    ]
-)
-
-rules = (
-    alt.Chart(thresholds)
-    .mark_rule()
-    .encode(
-        alt.Y("lp:Q", title=None), color=alt.value("#224455"), opacity=alt.value(0.3)
-    )
-)
-
-text = (
-    alt.Chart(thresholds)
-    .mark_text(align="center", dy=-5)
-    .encode(alt.Y("lp:Q", title=None), text="rank", opacity=alt.value(0.3))
-)
+st.subheader("Road to Master", divider=True)
 
 if player_dataset["lp"].isnull().all():
     st.write("No data available.")
 else:
-    st.altair_chart(c + rules + text, use_container_width=True)
+    tab_date, tab_match = st.tabs(["Date", "Match"])
+
+    with tab_date:
+        st.altair_chart(
+            replay_viewer_helper.get_chart_lp_date(
+                player_dataset, interval_mapping, interval_option
+            ),
+            use_container_width=True,
+        )
+
+    with tab_match:
+        st.altair_chart(
+            replay_viewer_helper.get_chart_lp_match(
+                player_dataset, base_tooltip, min_match_range, max_match_range
+            ),
+            use_container_width=True,
+        )
 
 # -------------------------------------------------------------------
 
 st.subheader("Master League", divider=True)
 
-c = (
-    alt.Chart(player_dataset)
-    .mark_bar(clip=True)
-    .encode(
-        x=alt.X(
-            "match:Q",
-            scale=alt.Scale(domain=[min_match_range, max_match_range]),
-            title=None,
-        ),
-        y=alt.Y("mr:Q", title=None).scale(domain=(1000, 2000)),
-        tooltip=["mr"] + base_tooltip,
-        color=alt.Color(
-            "character:N",
-            legend=alt.Legend(orient="bottom"),
-            scale=alt.Scale(scheme="set3"),
-        ),
-    )
-)
-
 if player_dataset["mr"].isnull().all():
     st.write("No data available.")
 else:
-    st.altair_chart(c, use_container_width=True)
+    tab_date, tab_match = st.tabs(["Date", "Match"])
+
+    with tab_date:
+        st.altair_chart(
+            replay_viewer_helper.get_chart_mr_date(
+                player_dataset, interval_mapping, interval_option
+            ),
+            use_container_width=True,
+        )
+
+    with tab_match:
+        st.altair_chart(
+            replay_viewer_helper.get_chart_mr_match(
+                player_dataset, min_match_range, max_match_range, base_tooltip
+            ),
+            use_container_width=True,
+        )
 
 # -------------------------------------------------------------------
 
-st.subheader("Daily result", divider=True)
+st.subheader("Result", divider=True)
 
-rules = (
-    alt.Chart(
-        pd.DataFrame(
-            {"result": [0.5]},
-        )
-    )
-    .mark_rule()
-    .encode(
-        alt.Y("result:Q", title=None),
-        color=alt.value("#224455"),
-        opacity=alt.value(0.3),
-    )
+tab_win_rate, tab_match_count = st.tabs(["Win rate", "Match count"])
+
+result_dataset_total = (
+    player_dataset[["played_at", "result"]]
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .count()
+)
+result_dataset_wins = (
+    player_dataset[["played_at", "result"]]
+    .query("result == 'wins'")
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .count()
 )
 
-c = (
-    alt.Chart(player_dataset)
-    .mark_bar(cornerRadius=5)
-    .encode(
-        x=alt.X("utcmonthdate(played_at):O", title=None),
-        y=alt.Y("result", aggregate="count", title=None).stack("normalize"),
-        color=alt.Color(
-            "result",
-            legend=alt.Legend(orient="bottom"),
-            scale=alt.Scale(
-                scheme="pastel2", domain=["wins", "loses"], range=["#b3e2cd", "#fdcdac"]
-            ),
-        ),
-    )
+result_dataset_div = (
+    result_dataset_wins.div(result_dataset_total)
+    .round(2)
+    .rename(columns={"result": "wins"})
+    .add_suffix("_rate")
+    .reset_index()
 )
-st.altair_chart(c + rules, use_container_width=True)
+
+result_dataset_total = result_dataset_total.reset_index()
+result_dataset_total.replace(0, numpy.nan, inplace=True)
+
+with tab_win_rate:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_win_rate(result_dataset_div),
+        use_container_width=True,
+    )
+with tab_match_count:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_match_count(result_dataset_total),
+        use_container_width=True,
+    )
 
 # -------------------------------------------------------------------
 
 st.subheader("Result by character", divider=True)
 
-option = st.selectbox(
-    "Interval",
-    ("Daily", "Weekly", "Monthly", "Yearly"),
+tab_win_rate, tab_match_count = st.tabs(["Win rate", "Match count"])
+
+opponent_dataset = replay_viewer_helper.get_opponent_dataset(
+    replay_dataset, player_name
 )
 
-interval_mapping = {
-    "Daily": "D",
-    "Weekly": "W",
-    "Monthly": "ME",
-    "Yearly": "YE",
-}
-
-p1_opponent_dataset = replay_dataset[
-    ~replay_dataset["p1_player_name"].str.contains(player_name, case=False, na=False)
-]
-p2_opponent_dataset = replay_dataset[
-    ~replay_dataset["p2_player_name"].str.contains(player_name, case=False, na=False)
-]
-p1_opponent_dataset = p1_opponent_dataset[
-    ["p1_character", "p1_result", "played_at"]
-].rename(
-    columns={
-        "p1_character": "character",
-        "p1_result": "result",
-    }
-)
-p2_opponent_dataset = p2_opponent_dataset[
-    ["p2_character", "p2_result", "played_at"]
-].rename(
-    columns={
-        "p2_character": "character",
-        "p2_result": "result",
-    }
-)
-opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
 opponent_dataset_total = opponent_dataset.groupby(
-    [pd.Grouper(key="played_at", freq=interval_mapping[option]), "character"]
+    [pd.Grouper(key="played_at", freq=interval_mapping[interval_option]), "character"]
 ).count()
 opponent_dataset_loses = (
     opponent_dataset.query("result == 'loses'")
-    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[option]), "character"])
+    .groupby(
+        [
+            pd.Grouper(key="played_at", freq=interval_mapping[interval_option]),
+            "character",
+        ]
+    )
     .count()
 )
 
@@ -489,20 +451,22 @@ opponent_dataset_div = (
     .reset_index()
 )
 
-c = (
-    alt.Chart(opponent_dataset_div)
-    .mark_rect()
-    .encode(
-        x=alt.X("utcmonthdate(played_at):O", title=None),
-        y=alt.Y("character", title=None),
-        color=alt.Color(
-            "wins_rate",
-            legend=alt.Legend(orient="bottom", format=".0%"),
-            scale=alt.Scale(scheme="redyellowgreen", domainMid=0.5),
+opponent_dataset_total = opponent_dataset_total.reset_index()
+
+with tab_win_rate:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_by_character_win_rate(
+            opponent_dataset_div
         ),
+        use_container_width=True,
     )
-)
-st.altair_chart(c, use_container_width=True)
+with tab_match_count:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_by_character_match_count(
+            opponent_dataset_total
+        ),
+        use_container_width=True,
+    )
 
 # -------------------------------------------------------------------
 
@@ -512,3 +476,5 @@ if debug_mode:
     st.dataframe(replay_dataset)
     "player_dataset"
     st.dataframe(player_dataset)
+    "opponent_dataset"
+    st.dataframe(opponent_dataset)
