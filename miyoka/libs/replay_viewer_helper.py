@@ -1,10 +1,10 @@
 from logging import Logger
 import hmac
 import pandas as pd
-import altair as alt
 
 try:
     import streamlit as st
+    import altair as alt
 except (ImportError, NotImplementedError) as e:
     print(
         "WARN: streamlit is not installed. You cannot run replay viewer in this environment."
