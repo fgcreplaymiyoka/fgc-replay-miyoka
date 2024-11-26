@@ -9,9 +9,9 @@
 Replay Uploader is the program to upload your replays from a fighting game to your cloud storage.
 
 1. Launch Street Fighter 6.
-1. Right-click on the `miyoka/upload-replay.ps1` file and select "Run with PowerShell".
+1. Right-click on the `miyoka/upload-replay.ps1` file and click **Run with PowerShell**.
     Alternatively, you can open Windows Powershell and execute the following command:
-    ```
+    ```shell
     powershell.exe -executionpolicy bypass -file .\upload-replay.ps1
     ```
 
@@ -24,14 +24,11 @@ NOTE:
 
 Replay Viewer is the program to view your replays in your cloud storage.
 
-1. Right-click on the `miyoka/deploy.ps1` file and select "Run with PowerShell".
+1. Right-click on the `miyoka/deploy.ps1` file and click **Run with PowerShell**.
     Alternatively, you can open Windows Powershell and execute the following command:
-    ```
+    ```shell
     powershell.exe -executionpolicy bypass -file .\deploy.ps1
     ```
-
-This command will deploy [the replay-viewer Docker image](https://hub.docker.com/r/fgcreplaymiyoka/replay-viewer/tags)
-to your cloud server.
 
 After the deployment succeeds, get URL to your replay-viewer.
 
@@ -40,7 +37,4 @@ After the deployment succeeds, get URL to your replay-viewer.
 
 You can create a bookmark to the URL in your mobile phone so that it's easy to access.
 
-Aside from the initial deployment, you should re-deploy when:
-
-- You changed `config.yml` file.
-- You want to use the latest replay-viewer Docker image.
+In addition to the initial deployment, you should re-deploy when you changed `replay_viewer` setting in `config.yml` file.

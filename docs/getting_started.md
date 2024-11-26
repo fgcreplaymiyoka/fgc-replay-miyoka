@@ -22,14 +22,14 @@ Community contributions are welcome to support more fighting games.
 ### Create your project in Google Cloud Platform
 
 1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project).
-1. [Install `gcloud` CLI](https://cloud.google.com/sdk/docs/install).
+1. [Install `gcloud` CLI](https://cloud.google.com/sdk/docs/install). Follow the instruction to login to the GCP from `gcloud`.
 
 ### Setup Miyoka
 
 1. Install [Python 3.11.3](https://www.python.org/downloads/windows/).
     - Recommended: [Windows installer (64-bit)](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
-1. Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx (python package manager).
-    - Recommended: [With the official installer](https://python-poetry.org/docs/#installing-with-the-official-installer)
+1. Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx).
+    - Recommended: [With the official installer](https://python-poetry.org/docs/#installing-with-the-official-installer). Follow the instruction to add PATH configuration in your terminal.
 1. [Download Miyoka](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases).
     1. Click **Source code (zip)** of the latest version.
     1. Right-click the downloaded file and select **Extract All**.
@@ -46,15 +46,15 @@ Community contributions are welcome to support more fighting games.
         ```shell
         poetry install --with win
         ```
-1. Right-click on the `miyoka/setup.ps1` file and select "Run with PowerShell".
+1. Right-click on the `miyoka/setup.ps1` file and click **Run with PowerShell**.
     Alternatively, you can open Windows Powershell and execute the following command:
-    ```
+    ```shell
     powershell.exe -executionpolicy bypass -file .\setup.ps1
     ```
     This command creates a `config.yaml` file in your Miyoka folder, which
     contains all of the information for your Miyoka server.
     Do **NOT** share it with someone else since it contains secrets.
-1. Replace `<required>` fields by your information in `config.yaml`.
+1. Replace `<required>` values by your information in `config.yaml`.
 
 ### Setup OBS
 
