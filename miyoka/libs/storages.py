@@ -43,8 +43,8 @@ class BaseStorageClient:
                 location=self.location,
             )
             self.logger.info(f"Bucket {self.bucket_name} created.")
-        except Conflict:
-            self.logger.info(f"Bucket {self.bucket_name} already exists.")
+        except Conflict as ex:
+            self.logger.info(f"Bucket {self.bucket_name} already exists. ex: {ex}")
 
     def upload_file(
         self,

@@ -19,26 +19,16 @@ Community contributions are welcome to support more fighting games.
 
 ## Setup
 
-### Setup GCP
-
-#### Create your project in Google Cloud Platform
+### Create your project in Google Cloud Platform
 
 1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project).
 1. [Install `gcloud` CLI](https://cloud.google.com/sdk/docs/install).
 
-<details>
-<summary>Tips:</summary>
-
-- You can find your project in GCP console. See [this](https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects) for more info.
-- See [GCP doc](gcp.md) for more details.
-
-</details>
-
 ### Setup Miyoka
 
-1. [Download Miyoka](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases).
 1. Install [Python 3.11.3](https://www.python.org/downloads/windows/).
 1. Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx), which is a package manager for python projects.
+1. [Download Miyoka](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases).
 1. Install dependencies of Miyoka:
     1. [Open a **Command Prompt**](https://www.wikihow.com/Open-the-Command-Prompt-in-Windows#:~:text=Open%20the%20%22Start%22%20menu%20and,%22%20and%20press%20%22Enter%22.) in your windows.
     1. [Change the current directory](https://www.geeksforgeeks.org/change-directories-in-command-prompt/) to the downloaded Miyoka project. e.g.

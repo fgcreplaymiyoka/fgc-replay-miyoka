@@ -21,14 +21,14 @@ gcp:
   storages:
     replays:
       # Name of the bucket of the replay video storage (i.e. "<bucket_name>/<replay-id>/<round-id>.mp4")
-      bucket_name: miyoka_replays
+      bucket_name: <gcp.storages.replays.bucket_name>
       # If true, skip the download. This is useful to debug the analyzer locally.
       skip_download: false
       # Dir path when the video is downloaded.
       download_dir: download
     frames:
       # (Optional) Name of the bucket of the split frames (i.e. "<bucket_name>/<replay-id>/<round-id>/<frame-range>.zip")
-      bucket_name: miyoka_frames
+      bucket_name: <gcp.storages.frames.bucket_name>
       # Number of workers for upload.
       workers: 2
   bigquery:
@@ -79,7 +79,7 @@ gcp:
   secrets:
     # config.yaml is uploaded to a secret and mounted to the Cloud Run service instance.
     config:
-      id:
+      id: miyoka-config
   cloud_run_job:
     replay_analyzer:
       # (Optional) Name of the Cloud Run Job for Replay Analyzer.
@@ -129,10 +129,9 @@ replay_analyzer:
   replay_id: ${REPLAY_ANALYZER_REPLAY_ID}
 replay_viewer:
   # Password to access to the Replay viewer.
-  # You should set a strong pasword to keep your replays private.
   # Optionally, you can set "None" to make the replay viewer publically accessible.
-  # This is <required> field.
-  password:
+  # In this mode, personally identifiable identifiers such as user name and replay ID are hidden.
+  password: miyoka
   # If true, additional information is visibile on the viewer for debugging purpose.
   debug_mode: false
   # Player name of your game account.
