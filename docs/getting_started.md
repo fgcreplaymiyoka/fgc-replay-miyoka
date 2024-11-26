@@ -27,14 +27,21 @@ Community contributions are welcome to support more fighting games.
 ### Setup Miyoka
 
 1. Install [Python 3.11.3](https://www.python.org/downloads/windows/).
-1. Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx), which is a package manager for python projects.
+    - Recommended: [Windows installer (64-bit)](https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe)
+1. Install [Poetry](https://python-poetry.org/docs/#installing-with-pipx (python package manager).
+    - Recommended: [With the official installer](https://python-poetry.org/docs/#installing-with-the-official-installer)
 1. [Download Miyoka](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/releases).
+    1. Click **Source code (zip)** of the latest version.
+    1. Right-click the downloaded file and select **Extract All**.
 1. Install dependencies of Miyoka:
-    1. [Open a **Command Prompt**](https://www.wikihow.com/Open-the-Command-Prompt-in-Windows#:~:text=Open%20the%20%22Start%22%20menu%20and,%22%20and%20press%20%22Enter%22.) in your windows.
-    1. [Change the current directory](https://www.geeksforgeeks.org/change-directories-in-command-prompt/) to the downloaded Miyoka project. e.g.
+    1. Open a **Windows Powershell** in your windows.
+        1. Click the Start or Search icon, and then type "powershell" in the search box.
+        1. Click "Open" or "Run as Administrator" to open PowerShell either normally or with administrative privileges.
+    1. Change the current directory to the downloaded Miyoka project. e.g.
         ```shell
-        cd fgc-replay-miyoka
+        cd c:\Users\name\Downloads\fgc-replay-miyoka-x.x.x\fgc-replay-miyoka-x.x.x
         ```
+        Tips: To copy the path, you can drag-and-drop the folder from the File explorer to the Powershell terminal.
     1. Install dependencies via poetry:
         ```shell
         poetry install --with win
@@ -47,25 +54,34 @@ Community contributions are welcome to support more fighting games.
     This command creates a `config.yaml` file in your Miyoka folder, which
     contains all of the information for your Miyoka server.
     Do **NOT** share it with someone else since it contains secrets.
-1. Update the config file `config.yaml` based on your personal information.
-   Most of the fields are pre-filled by `setup.ps1` script,
-   and you need to complete the rest of the `<required>` fields manually. e.g. `player_name`
+1. Replace `<required>` fields by your information in `config.yaml`.
 
 ### Setup OBS
 
 1. [Download OBS](https://obsproject.com/download).
-1. [Enable websocket server](https://fms-manual.readthedocs.io/en/latest/audience-display/obs-integration/obs-websockets.html).
-    - Change secret to "secret"
-1. [Change recording resolution](https://obsproject.com/kb/standard-recording-output-guide) to 1280 x 720
-1. Change OBS Recording FPS setting from 60. Settings > Video > Integer FPS Value > 60 > Apply
-1. Set OUTPUT > Recording > Recording Format to "MPEG-4 (.mp4)"
-1. Run OBS Studio as Administrator ([ref](https://www.google.com/search?q=obs+studio+run+as+administrator&rlz=1C1LLPF_enJP1059JP1059&oq=OBS+Studio+admini&gs_lcrp=EgZjaHJvbWUqCAgBEAAYFhgeMgYIABBFGDkyCAgBEAAYFhgeMgoIAhAAGAgYDRgeMgoIAxAAGAgYDRgeMg0IBBAAGIYDGIAEGIoFMg0IBRAAGIYDGIAEGIoFMg0IBhAAGIYDGIAEGIoFMg0IBxAAGIYDGIAEGIoFMg0ICBAAGIYDGIAEGIoFMgoICRAAGIAEGKIE0gEIMzc5MWowajeoAgCwAgA&sourceid=chrome&ie=UTF-8)). This could reduce the frame dropping rate.
-
-<details>
-<summary>Explanation:</summary>
-Miyoka uses OBS to record replays on the game screen. OBS is quite performant that can reduce the frame dropping rate (approx. 1-5% loss).
-Since fighting games are usually processing p1/p2 frames at 60 FPS, the recording FPS must be equal to or greater than that.
-</details>
+1. Create a new Game Capture source.
+    1. Click **Sources > + (Add Source)** button.
+    1. Select **Game Capture** and click **OK**.
+    1. Select **Mode > Capture Specific Window**.
+    1. Select **Window > [<game-title>.exe]** and click **OK**.
+1. [Enable websocket server](https://fms-manual.readthedocs.io/en/latest/audience-display/obs-integration/obs-websockets.html):
+    1. Click **Tools > WebSocket Server Settings**.
+    1. Check **Enable WebSocket server**.
+    1. Change the **Server Password** to `secret`.
+    1. Click **Apply** button.
+1. [Change recording resolution](https://obsproject.com/kb/standard-recording-output-guide) to 640x360 or 1280x720:
+    1. Click **Controls > Settings**.
+    1. Select **Video** menu.
+    1. Ensure **Base (Canvas) Resolution** is 1280x720.
+    1. Ensure **Output (Scaled) Resolution** is 640x360 or 1280x720. If you mainly watch replays without Wi-fi, it's recommended to set a lower resolution for faster streaming.
+    1. Ensure **Common FPS Values** is selected, which records the replays 60 FPS.
+    1. Click **Apply**.
+1. Output settings:
+    1. Click **Controls > Settings**.
+    1. Select **Output** menu.
+    1. Ensure **Recording format** is **MPEG-4 (.mp4)**.
+    1. Ensure **Video Encoder** is **Hardware (NVENC, H.264)** or **Software (x264)** (If your graphic card doesn't support hardware acceleration).
+    1. Click **Apply**.
 
 ## Continue
 

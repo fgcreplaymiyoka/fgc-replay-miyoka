@@ -33,7 +33,7 @@ Replay Viewer is the program to view your replays in your cloud storage.
 This command will deploy [the replay-viewer Docker image](https://hub.docker.com/r/fgcreplaymiyoka/replay-viewer/tags)
 to your cloud server.
 
-After the deploymend succeds, get URL to your replay-viewer.
+After the deployment succeeds, get URL to your replay-viewer.
 
 1. Visit [Google Cloud Platform](https://cloud.google.com/).
 1. Navigate to **Your GCP project > Cloud Run > miyoka-viewer**. The URL is displayed at the top.
