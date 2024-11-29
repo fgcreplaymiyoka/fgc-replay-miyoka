@@ -19,6 +19,10 @@ Community contributions are welcome to support more fighting games.
 
 ## Setup
 
+Tutorial video:
+
+[![Tutorial](https://img.youtube.com/vi/DYYpQVEDRVA/0.jpg)](https://www.youtube.com/watch?v=DYYpQVEDRVA)
+
 ### Create your project in Google Cloud Platform
 
 1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project).
