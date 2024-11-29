@@ -266,6 +266,8 @@ class ScreenCustomizer(ScreenCustomizerBase):
                         pydirectinput.press("f")  # Enter - To select Language
                 case "OptionsLanguageDisplayLanguageSelectEnglish":
                     pass  # TODO:
+                case "ErrorCommunication" | "ErrorCommunication2":
+                    pydirectinput.press("f")  # OK - Close dialog
                 case (
                     "ReplaySummary"
                     | "SearchResults"
