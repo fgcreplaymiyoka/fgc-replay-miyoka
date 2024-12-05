@@ -22,6 +22,7 @@ from miyoka.sf6.constants import (
     get_nth_character_combination,
     replay_select_character_position,
 )
+import traceback
 
 pydirectinput.FAILSAFE = False
 
@@ -87,6 +88,13 @@ class ReplayUploader(ReplayUploaderBase):
             )
 
     def run(self):
+        try:
+            self._run()
+        except Exception as e:
+            self.logger.error(f"Error: {e} traceback: {traceback.format_exc()}")
+            raise e
+
+    def _run(self):
         tab_repeat_mode = False
         g_repeat_mode = False
 
@@ -279,6 +287,7 @@ class ReplayUploader(ReplayUploaderBase):
 
     def extract_replay_summary(self, frame) -> bool:
         current_replay_id = self.game_window_helper.identify_replay_id(frame)
+        self.logger.info(f"Current Replay ID: {current_replay_id}")
 
         self.current_replay_id = current_replay_id
 
