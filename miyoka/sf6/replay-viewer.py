@@ -36,12 +36,12 @@ def load_replay_viewer_helper():
 
 
 def next_match():
-    st.session_state.current_replay_index += 1
+    st.session_state.current_replay_row_idx += 1
     st.session_state.current_round_id = 1
 
 
 def prev_match():
-    st.session_state.current_replay_index -= 1
+    st.session_state.current_replay_row_idx -= 1
     st.session_state.current_round_id = 1
 
 
@@ -72,8 +72,8 @@ def play_date_range_changed():
     st.session_state.play_date_range_changed = True
 
 
-def match_range_changed():
-    st.session_state.match_range_changed = True
+def filter_changed():
+    st.session_state.filter_changed = True
 
 
 def highlight_cols(s):
@@ -98,10 +98,10 @@ if debug_mode:
 replay_dataset: pd.DataFrame = load_replay_dataset(time_range, after_time)
 replay_storage: ReplayStorage = load_replay_storage()
 
-last_replay_index = replay_dataset.index[len(replay_dataset) - 1]
+last_replay_row_idx = len(replay_dataset) - 1
 
-if "current_replay_index" not in st.session_state:
-    st.session_state.current_replay_index = last_replay_index
+if "current_replay_row_idx" not in st.session_state:
+    st.session_state.current_replay_row_idx = last_replay_row_idx
 
 if "current_round_id" not in st.session_state:
     st.session_state.current_round_id = 1
@@ -109,8 +109,8 @@ if "current_round_id" not in st.session_state:
 if "play_date_range_changed" not in st.session_state:
     st.session_state.play_date_range_changed = True
 
-if "match_range_changed" not in st.session_state:
-    st.session_state.match_range_changed = True
+if "filter_changed" not in st.session_state:
+    st.session_state.filter_changed = True
 
 ###############################################################################################
 # Login
@@ -157,43 +157,53 @@ with st.sidebar:
         "Played after:",
         value=st.session_state.current_played_after,
         min_value=replay_dataset.iloc[0]["played_at"],
-        max_value=replay_dataset.iloc[last_replay_index]["played_at"],
+        max_value=replay_dataset.iloc[last_replay_row_idx]["played_at"],
         format="MM/DD",
     )
 
     replay_dataset = replay_dataset[replay_dataset["played_at"] >= played_after]
+    last_replay_row_idx = len(replay_dataset) - 1
 
-    last_replay_index = len(replay_dataset) - 1
+    # Filter by result
+    result_filter = st.selectbox(
+        "Result", ("all", "wins", "loses"), on_change=filter_changed
+    )
+    replay_dataset = replay_viewer_helper.filter_replay_dataset_by_result(
+        result_filter, replay_dataset, player_name
+    )
+    last_replay_row_idx = len(replay_dataset) - 1
 
+    # Filter by match range
     min_match_range, max_match_range = st.slider(
         "Match range",
         replay_dataset.index[0],
-        replay_dataset.index[last_replay_index],
+        replay_dataset.index[last_replay_row_idx],
         (
             replay_dataset.index[0],
-            replay_dataset.index[last_replay_index],
+            replay_dataset.index[last_replay_row_idx],
         ),
-        on_change=match_range_changed,
+        on_change=filter_changed,
     )
 
     replay_dataset = replay_dataset[
         (replay_dataset.index >= min_match_range)
         & (replay_dataset.index <= max_match_range)
     ]
+    last_replay_row_idx = len(replay_dataset) - 1
 
-    last_replay_index = len(replay_dataset) - 1
+    if st.session_state.filter_changed:
+        st.session_state.current_replay_row_idx = last_replay_row_idx
+        st.session_state.filter_changed = False
 
-    if st.session_state.match_range_changed:
-        st.session_state.current_replay_index = replay_dataset.index[last_replay_index]
-        st.session_state.match_range_changed = False
+    st.subheader("Control")
 
     value = st.slider(
         "Match",
-        min_value=replay_dataset.index[0],
-        max_value=replay_dataset.index[last_replay_index],
-        value=st.session_state.current_replay_index,
+        min_value=0,
+        max_value=last_replay_row_idx,
+        value=st.session_state.current_replay_row_idx,
     )
-    st.session_state.current_replay_index = value
+    st.session_state.current_replay_row_idx = value
 
     st.subheader("Aggregation")
 
@@ -209,18 +219,14 @@ with st.sidebar:
         "Yearly": "YE",
     }
 
-current_row = replay_dataset[
-    replay_dataset.index == st.session_state.current_replay_index
-].iloc[0]
+current_row = replay_dataset.iloc[st.session_state.current_replay_row_idx]
 current_row_player_side = (
     1 if re.match(player_name, current_row["p1_player_name"]) else 2
 )
 replay_id = current_row["replay_id"]
 round_id = st.session_state.current_round_id
-next_match_exist = (
-    st.session_state.current_replay_index < replay_dataset.index[last_replay_index]
-)
-prev_match_exist = st.session_state.current_replay_index > replay_dataset.index[0]
+next_match_exist = st.session_state.current_replay_row_idx < last_replay_row_idx
+prev_match_exist = st.session_state.current_replay_row_idx > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)

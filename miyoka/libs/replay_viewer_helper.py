@@ -195,6 +195,27 @@ class ReplayViewerHelper:
         )
         return c
 
+    def filter_replay_dataset_by_result(
+        self, result_filter, replay_dataset, player_name
+    ):
+        if result_filter == "all":
+            return replay_dataset
+
+        return replay_dataset[
+            (
+                replay_dataset["p1_player_name"].str.contains(
+                    player_name, case=False, na=False
+                )
+                & (replay_dataset["p1_result"] == result_filter)
+            )
+            | (
+                replay_dataset["p2_player_name"].str.contains(
+                    player_name, case=False, na=False
+                )
+                & (replay_dataset["p2_result"] == result_filter)
+            )
+        ]
+
     def get_player_dataset(self, replay_dataset, player_name):
         p1_player_dataset = replay_dataset[
             replay_dataset["p1_player_name"].str.contains(
@@ -212,6 +233,7 @@ class ReplayViewerHelper:
                 "p1_lp",
                 "p1_mr",
                 "p1_result",
+                "p1_round_results",
                 "p1_character",
                 "replay_id",
                 "played_at",
@@ -222,15 +244,18 @@ class ReplayViewerHelper:
                 "p1_lp": "lp",
                 "p1_mr": "mr",
                 "p1_result": "result",
+                "p1_round_results": "round_results",
                 "p1_character": "character",
             }
         )
+        p1_player_dataset["player_side"] = 1
         p2_player_dataset = p2_player_dataset[
             [
                 "p2_rank",
                 "p2_lp",
                 "p2_mr",
                 "p2_result",
+                "p2_round_results",
                 "p2_character",
                 "replay_id",
                 "played_at",
@@ -241,9 +266,11 @@ class ReplayViewerHelper:
                 "p2_lp": "lp",
                 "p2_mr": "mr",
                 "p2_result": "result",
+                "p2_round_results": "round_results",
                 "p2_character": "character",
             }
         )
+        p2_player_dataset["player_side"] = 2
         player_dataset = pd.concat([p1_player_dataset, p2_player_dataset], axis=0)
         player_dataset = player_dataset.reset_index().rename(columns={"index": "match"})
         player_dataset = player_dataset.sort_values(by="match")
