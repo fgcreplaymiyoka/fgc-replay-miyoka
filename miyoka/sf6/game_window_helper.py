@@ -2,7 +2,7 @@ import cv2 as cv
 import numpy as np
 from miyoka.libs.game_window_helper import GameWindowHelper as GameWindowHelperBase
 from datetime import datetime
-
+import urllib.parse
 
 class GameWindowHelper(GameWindowHelperBase):
     def templates_dir(self, dir):
@@ -190,7 +190,7 @@ class GameWindowHelper(GameWindowHelperBase):
 
         name = self.detect_text(f"last_images/identify_replay_id/image.jpeg")
 
-        return name
+        return urllib.parse.quote_plus(name)
 
     def identify_played_at(self, image):
         roi = (858, 108, 120, 20)
