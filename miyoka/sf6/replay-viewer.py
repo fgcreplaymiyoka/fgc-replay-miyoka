@@ -70,6 +70,7 @@ def render_current_row_value(key: str) -> str:
 
 def play_date_range_changed():
     st.session_state.play_date_range_changed = True
+    st.session_state.filter_changed = True
 
 
 def filter_changed():

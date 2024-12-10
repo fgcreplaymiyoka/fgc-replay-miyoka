@@ -4,6 +4,7 @@ from miyoka.libs.game_window_helper import GameWindowHelper as GameWindowHelperB
 from datetime import datetime
 import urllib.parse
 
+
 class GameWindowHelper(GameWindowHelperBase):
     def templates_dir(self, dir):
         return f"miyoka/sf6/templates/{self.normalized_screen_width}x{self.normalized_screen_height}/{self.screen_language}/{dir}"
