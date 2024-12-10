@@ -19,6 +19,7 @@ class ReplayViewerHelper:
         player_name: str,
         time_range: str,
         after_time: str,
+        default_played_after_filter: str,
         debug_mode: bool,
         *args,
         **kwargs,
@@ -28,6 +29,7 @@ class ReplayViewerHelper:
         self.player_name = player_name
         self.time_range = time_range
         self.after_time = after_time
+        self.default_played_after_filter = default_played_after_filter
         self._debug_mode = debug_mode
 
     @property

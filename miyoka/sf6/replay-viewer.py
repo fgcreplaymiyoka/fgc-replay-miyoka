@@ -113,6 +113,26 @@ if "play_date_range_changed" not in st.session_state:
 if "filter_changed" not in st.session_state:
     st.session_state.filter_changed = True
 
+played_after_mapping = {
+    "Last 1 day": 1,
+    "Last 2 days": 2,
+    "Last 7 days": 7,
+    "Last 14 days": 14,
+    "Last 30 days": 30,
+    "All": -1,
+}
+
+played_after_mapping_keys = [key for key in played_after_mapping]
+
+if "played_after_option_index" not in st.session_state:
+    if replay_viewer_helper.default_played_after_filter:
+        st.session_state.played_after_option_index = played_after_mapping_keys.index(
+            replay_viewer_helper.default_played_after_filter
+        )
+    else:
+        st.session_state.played_after_option_index = len(played_after_mapping_keys) - 1
+
+
 ###############################################################################################
 # Login
 ###############################################################################################
@@ -127,19 +147,11 @@ if not replay_viewer_helper.check_password():
 with st.sidebar:
     st.subheader("Filters")
 
-    played_after_mapping = {
-        "Last 1 day": 1,
-        "Last 2 days": 2,
-        "Last 7 days": 7,
-        "Last 14 days": 14,
-        "Last 30 days": 30,
-    }
-
     played_after_option = st.selectbox(
         "Played after:",
-        (*played_after_mapping, "All"),
+        played_after_mapping_keys,
         on_change=play_date_range_changed,
-        index=len(played_after_mapping) - 1,
+        index=st.session_state.played_after_option_index,
     )
 
     if st.session_state.play_date_range_changed:

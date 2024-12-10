@@ -140,6 +140,9 @@ replay_viewer:
   time_range:
   # Replay dataset after the specific date time is displayed. e.g. 2024-01-01 00:00:00
   after_time:
+  # Default value of played after filter. One of "Last 1 day", "Last 2 days", "Last 7 days", "Last 14 days", "Last 30 days".
+  # If it's not specified, "Last 30 days" is used.
+  default_played_after_filter:
 log:
   name: miyoka
   dir_path: logs
