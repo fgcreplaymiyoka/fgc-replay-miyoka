@@ -441,48 +441,44 @@ with tab_match_count:
 
 st.subheader("Result by character", divider=True)
 
-tab_win_rate, tab_match_count = st.tabs(["Win rate", "Match count"])
+tab_priority_score, tab_win_rate, tab_match_count = st.tabs(
+    ["Priority", "Win rate", "Match count"]
+)
 
 opponent_dataset = replay_viewer_helper.get_opponent_dataset(
     replay_dataset, player_name
 )
 
-opponent_dataset_total = opponent_dataset.groupby(
-    [pd.Grouper(key="played_at", freq=interval_mapping[interval_option]), "character"]
-).count()
-opponent_dataset_loses = (
-    opponent_dataset.query("result == 'loses'")
-    .groupby(
-        [
-            pd.Grouper(key="played_at", freq=interval_mapping[interval_option]),
-            "character",
-        ]
+opponent_dataset_priority = replay_viewer_helper.get_opponent_dataset_priority(
+    opponent_dataset, interval_mapping, interval_option
+)
+
+opponent_dataset_priority = opponent_dataset_priority.reset_index()
+
+with tab_priority_score:
+    st.altair_chart(
+        replay_viewer_helper.get_chart_result_by_character_priority_score(
+            opponent_dataset_priority
+        ),
+        use_container_width=True,
     )
-    .count()
-)
 
-opponent_dataset_div = (
-    opponent_dataset_loses.div(opponent_dataset_total)
-    .round(2)
-    .rename(columns={"result": "wins"})
-    .add_suffix("_rate")
-    .fillna(0.0)
-    .reset_index()
-)
-
-opponent_dataset_total = opponent_dataset_total.reset_index()
+    """
+    Priority score is calculated by the formula: count * (1 - win rate).
+    The higher the score, the more you should prioritize the specific matchup.
+    """
 
 with tab_win_rate:
     st.altair_chart(
         replay_viewer_helper.get_chart_result_by_character_win_rate(
-            opponent_dataset_div
+            opponent_dataset_priority
         ),
         use_container_width=True,
     )
 with tab_match_count:
     st.altair_chart(
         replay_viewer_helper.get_chart_result_by_character_match_count(
-            opponent_dataset_total
+            opponent_dataset_priority
         ),
         use_container_width=True,
     )

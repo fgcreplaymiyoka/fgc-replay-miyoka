@@ -308,9 +308,65 @@ class ReplayViewerHelper:
         opponent_dataset = pd.concat([p1_opponent_dataset, p2_opponent_dataset], axis=0)
         return opponent_dataset
 
-    def get_chart_result_by_character_win_rate(self, opponent_dataset_div):
+    def get_opponent_dataset_priority(
+        self, opponent_dataset: pd.DataFrame, interval_mapping, interval_option
+    ) -> pd.DataFrame:
+        opponent_dataset_total = (
+            opponent_dataset.groupby(
+                [
+                    pd.Grouper(key="played_at", freq=interval_mapping[interval_option]),
+                    "character",
+                ]
+            )
+            .count()
+            .rename(columns={"result": "count"})
+        )
+
+        opponent_dataset_loses = (
+            opponent_dataset.query("result == 'loses'")
+            .groupby(
+                [
+                    pd.Grouper(key="played_at", freq=interval_mapping[interval_option]),
+                    "character",
+                ]
+            )
+            .count()
+            .rename(columns={"result": "count"})
+        )
+
+        opponent_dataset_div = (
+            opponent_dataset_loses.div(opponent_dataset_total)
+            .round(2)
+            .rename(columns={"count": "wins"})
+            .add_suffix("_rate")
+            .fillna(0.0)
+        )
+
+        opponent_dataset_priority = opponent_dataset_div.join(opponent_dataset_total)
+        opponent_dataset_priority["priority"] = opponent_dataset_priority.apply(
+            lambda row: row["count"] * (1.0 - row["wins_rate"]), axis=1
+        )
+
+        return opponent_dataset_priority
+
+    def get_chart_result_by_character_priority_score(self, opponent_dataset_priority):
         return (
-            alt.Chart(opponent_dataset_div)
+            alt.Chart(opponent_dataset_priority)
+            .mark_rect()
+            .encode(
+                x=alt.X("monthdate(played_at):O", title=None),
+                y=alt.Y("character", title=None),
+                color=alt.Color(
+                    "priority:Q",
+                    legend=alt.Legend(orient="bottom"),
+                    scale=alt.Scale(scheme="reds"),
+                ),
+            )
+        )
+
+    def get_chart_result_by_character_win_rate(self, opponent_dataset_priority):
+        return (
+            alt.Chart(opponent_dataset_priority)
             .mark_rect()
             .encode(
                 x=alt.X("monthdate(played_at):O", title=None),
@@ -328,14 +384,14 @@ class ReplayViewerHelper:
             )
         )
 
-    def get_chart_result_by_character_match_count(self, opponent_dataset_total):
+    def get_chart_result_by_character_match_count(self, opponent_dataset_priority):
         return (
-            alt.Chart(opponent_dataset_total)
+            alt.Chart(opponent_dataset_priority)
             .mark_rect(clip=True)
             .encode(
                 x=alt.X("monthdate(played_at):O", title=None),
                 y=alt.Y("character:N", title=None),
-                color=alt.Color("result:Q", legend=alt.Legend(orient="bottom")),
+                color=alt.Color("count:Q", legend=alt.Legend(orient="bottom")),
             )
         )
 
