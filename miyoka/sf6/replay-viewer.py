@@ -145,6 +145,20 @@ if not replay_viewer_helper.check_password():
 ###############################################################################################
 
 with st.sidebar:
+    st.subheader("Chart Visualization")
+
+    interval_option = st.selectbox(
+        "Aggregation Interval",
+        ("Daily", "Weekly", "Monthly", "Yearly"),
+    )
+
+    interval_mapping = {
+        "Daily": "D",
+        "Weekly": "W",
+        "Monthly": "ME",
+        "Yearly": "YE",
+    }
+
     st.subheader("Filters")
 
     played_after_option = st.selectbox(
@@ -207,30 +221,6 @@ with st.sidebar:
     if st.session_state.filter_changed:
         st.session_state.current_replay_row_idx = last_replay_row_idx
         st.session_state.filter_changed = False
-
-    st.subheader("Control")
-
-    value = st.slider(
-        "Match",
-        min_value=0,
-        max_value=last_replay_row_idx,
-        value=st.session_state.current_replay_row_idx,
-    )
-    st.session_state.current_replay_row_idx = value
-
-    st.subheader("Aggregation")
-
-    interval_option = st.selectbox(
-        "Interval",
-        ("Daily", "Weekly", "Monthly", "Yearly"),
-    )
-
-    interval_mapping = {
-        "Daily": "D",
-        "Weekly": "W",
-        "Monthly": "ME",
-        "Yearly": "YE",
-    }
 
 current_row = replay_dataset.iloc[st.session_state.current_replay_row_idx]
 current_row_player_side = (
@@ -338,6 +328,10 @@ col_3.markdown(
 col_4.markdown(
     f"<p class='big-font'><a href='{video_path}' download='replay.mp4'>Download replay</a></p>",
     unsafe_allow_html=True,
+)
+
+st.slider(
+    "Match", min_value=0, max_value=last_replay_row_idx, key="current_replay_row_idx"
 )
 
 # -------------------------------------------------------------------
