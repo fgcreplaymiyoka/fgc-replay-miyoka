@@ -191,6 +191,16 @@ with st.sidebar:
     replay_dataset = replay_dataset[replay_dataset["played_at"] >= played_after]
     last_replay_row_idx = len(replay_dataset) - 1
 
+    # Filter by character
+    character_list = replay_viewer_helper.get_character_list(replay_dataset)
+    character_filter = st.selectbox(
+        "Character", ("all", *character_list), on_change=filter_changed
+    )
+    replay_dataset = replay_viewer_helper.filter_replay_dataset_by_character(
+        character_filter, replay_dataset, player_name
+    )
+    last_replay_row_idx = len(replay_dataset) - 1
+
     # Filter by result
     result_filter = st.selectbox(
         "Result", ("all", "wins", "loses"), on_change=filter_changed
@@ -435,8 +445,8 @@ with tab_match_count:
 
 st.subheader("Result by character", divider=True)
 
-tab_priority_score, tab_win_rate, tab_match_count = st.tabs(
-    ["Priority", "Win rate", "Match count"]
+tab_win_rate, tab_match_count, tab_priority_score = st.tabs(
+    ["Win rate", "Match count", "Priority"]
 )
 
 opponent_dataset = replay_viewer_helper.get_opponent_dataset(

@@ -218,6 +218,32 @@ class ReplayViewerHelper:
             )
         ]
 
+    def filter_replay_dataset_by_character(
+        self, character_filter, replay_dataset, player_name
+    ):
+        if character_filter == "all":
+            return replay_dataset
+
+        return replay_dataset[
+            (
+                ~replay_dataset["p1_player_name"].str.contains(
+                    player_name, case=False, na=False
+                )
+                & (replay_dataset["p1_character"] == character_filter)
+            )
+            | (
+                ~replay_dataset["p2_player_name"].str.contains(
+                    player_name, case=False, na=False
+                )
+                & (replay_dataset["p2_character"] == character_filter)
+            )
+        ]
+
+    def get_character_list(self, replay_dataset):
+        return pd.concat(
+            [replay_dataset["p1_character"], replay_dataset["p2_character"]]
+        ).unique()
+
     def get_player_dataset(self, replay_dataset, player_name):
         p1_player_dataset = replay_dataset[
             replay_dataset["p1_player_name"].str.contains(
