@@ -36,21 +36,25 @@ def load_replay_viewer_helper():
 
 
 def next_match():
-    st.session_state.current_replay_row_idx += 1
-    st.session_state.current_round_id = 1
+    st.query_params.current_replay_row_idx = (
+        int(st.query_params.current_replay_row_idx) + 1
+    )
+    st.query_params.current_round_id = 1
 
 
 def prev_match():
-    st.session_state.current_replay_row_idx -= 1
-    st.session_state.current_round_id = 1
+    st.query_params.current_replay_row_idx = (
+        int(st.query_params.current_replay_row_idx) - 1
+    )
+    st.query_params.current_round_id = 1
 
 
 def next_round():
-    st.session_state.current_round_id += 1
+    st.query_params.current_round_id = int(st.query_params.current_round_id) + 1
 
 
 def prev_round():
-    st.session_state.current_round_id -= 1
+    st.query_params.current_round_id = int(st.query_params.current_round_id) - 1
 
 
 def render_current_row_value(key: str) -> str:
@@ -69,12 +73,16 @@ def render_current_row_value(key: str) -> str:
 
 
 def play_date_range_changed():
-    st.session_state.play_date_range_changed = True
-    st.session_state.filter_changed = True
+    st.query_params.play_date_range_changed = True
+    st.query_params.filter_changed = True
 
 
 def filter_changed():
-    st.session_state.filter_changed = True
+    st.query_params.filter_changed = True
+
+
+def clear_query_params():
+    st.query_params.clear()
 
 
 def highlight_cols(s):
@@ -101,17 +109,44 @@ replay_storage: ReplayStorage = load_replay_storage()
 
 last_replay_row_idx = len(replay_dataset) - 1
 
-if "current_replay_row_idx" not in st.session_state:
-    st.session_state.current_replay_row_idx = last_replay_row_idx
+if "current_replay_row_idx" not in st.query_params:
+    st.query_params.current_replay_row_idx = last_replay_row_idx
 
-if "current_round_id" not in st.session_state:
-    st.session_state.current_round_id = 1
+if "current_round_id" not in st.query_params:
+    st.query_params.current_round_id = 1
 
-if "play_date_range_changed" not in st.session_state:
-    st.session_state.play_date_range_changed = True
+result_list = ("all", "wins", "loses")
 
-if "filter_changed" not in st.session_state:
-    st.session_state.filter_changed = True
+
+def result_filter_changed():
+    st.query_params.current_result_filter_index = result_list.index(
+        st.session_state.result_filter
+    )
+    st.query_params.filter_changed = True
+
+
+if "current_result_filter_index" not in st.query_params:
+    st.query_params.current_result_filter_index = result_list.index("all")
+
+character_list = replay_viewer_helper.get_character_list(replay_dataset)
+character_list = ("all", *character_list)
+
+
+def character_filter_changed():
+    st.query_params.current_character_filter_index = character_list.index(
+        st.session_state.character_filter
+    )
+    st.query_params.filter_changed = True
+
+
+if "current_character_filter_index" not in st.query_params:
+    st.query_params.current_character_filter_index = character_list.index("all")
+
+if "play_date_range_changed" not in st.query_params:
+    st.query_params.play_date_range_changed = True
+
+if "filter_changed" not in st.query_params:
+    st.query_params.filter_changed = True
 
 played_after_mapping = {
     "Last 1 day": 1,
@@ -124,13 +159,13 @@ played_after_mapping = {
 
 played_after_mapping_keys = [key for key in played_after_mapping]
 
-if "played_after_option_index" not in st.session_state:
+if "played_after_option_index" not in st.query_params:
     if replay_viewer_helper.default_played_after_filter:
-        st.session_state.played_after_option_index = played_after_mapping_keys.index(
+        st.query_params.played_after_option_index = played_after_mapping_keys.index(
             replay_viewer_helper.default_played_after_filter
         )
     else:
-        st.session_state.played_after_option_index = len(played_after_mapping_keys) - 1
+        st.query_params.played_after_option_index = len(played_after_mapping_keys) - 1
 
 
 ###############################################################################################
@@ -165,24 +200,25 @@ with st.sidebar:
         "Played after:",
         played_after_mapping_keys,
         on_change=play_date_range_changed,
-        index=st.session_state.played_after_option_index,
+        index=int(st.query_params.played_after_option_index),
     )
 
-    if st.session_state.play_date_range_changed:
+    if st.query_params.play_date_range_changed == "True":
         if played_after_option == "All":
-            st.session_state.current_played_after = replay_dataset.iloc[0][
-                "played_at"
-            ].to_pydatetime()
-        else:
-            st.session_state.current_played_after = datetime.now() - timedelta(
-                days=played_after_mapping[played_after_option]
+            st.query_params.current_played_after = (
+                replay_dataset.iloc[0]["played_at"].to_pydatetime().timestamp()
             )
+        else:
+            st.query_params.current_played_after = (
+                datetime.now()
+                - timedelta(days=played_after_mapping[played_after_option])
+            ).timestamp()
 
-        st.session_state.play_date_range_changed = False
+        st.query_params.play_date_range_changed = False
 
     played_after = st.slider(
         "Played after:",
-        value=st.session_state.current_played_after,
+        value=datetime.fromtimestamp(float(st.query_params.current_played_after)),
         min_value=replay_dataset.iloc[0]["played_at"],
         max_value=replay_dataset.iloc[last_replay_row_idx]["played_at"],
         format="MM/DD",
@@ -192,9 +228,12 @@ with st.sidebar:
     last_replay_row_idx = len(replay_dataset) - 1
 
     # Filter by character
-    character_list = replay_viewer_helper.get_character_list(replay_dataset)
     character_filter = st.selectbox(
-        "Character", ("all", *character_list), on_change=filter_changed
+        "Character",
+        character_list,
+        index=int(st.query_params.current_character_filter_index),
+        key="character_filter",
+        on_change=character_filter_changed,
     )
     replay_dataset = replay_viewer_helper.filter_replay_dataset_by_character(
         character_filter, replay_dataset, player_name
@@ -203,7 +242,11 @@ with st.sidebar:
 
     # Filter by result
     result_filter = st.selectbox(
-        "Result", ("all", "wins", "loses"), on_change=filter_changed
+        "Result",
+        result_list,
+        index=int(st.query_params.current_result_filter_index),
+        key="result_filter",
+        on_change=result_filter_changed,
     )
     replay_dataset = replay_viewer_helper.filter_replay_dataset_by_result(
         result_filter, replay_dataset, player_name
@@ -228,18 +271,18 @@ with st.sidebar:
     ]
     last_replay_row_idx = len(replay_dataset) - 1
 
-    if st.session_state.filter_changed:
-        st.session_state.current_replay_row_idx = last_replay_row_idx
-        st.session_state.filter_changed = False
+    if st.query_params.filter_changed == "True":
+        st.query_params.current_replay_row_idx = last_replay_row_idx
+        st.query_params.filter_changed = False
 
-current_row = replay_dataset.iloc[st.session_state.current_replay_row_idx]
+current_row = replay_dataset.iloc[int(st.query_params.current_replay_row_idx)]
 current_row_player_side = (
     1 if re.match(player_name, current_row["p1_player_name"]) else 2
 )
 replay_id = current_row["replay_id"]
-round_id = st.session_state.current_round_id
-next_match_exist = st.session_state.current_replay_row_idx < last_replay_row_idx
-prev_match_exist = st.session_state.current_replay_row_idx > 0
+round_id = int(st.query_params.current_round_id)
+next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row_idx
+prev_match_exist = int(st.query_params.current_replay_row_idx) > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
 video_path = replay_storage.get_authenticated_url(replay_id, round_id)
@@ -332,7 +375,7 @@ col_2.markdown(
     f"<p class='big-font'>Date: {current_row['played_at']}</p>", unsafe_allow_html=True
 )
 col_3.markdown(
-    f"<p class='big-font'>Round: {st.session_state.current_round_id}</p>",
+    f"<p class='big-font'>Round: {st.query_params.current_round_id}</p>",
     unsafe_allow_html=True,
 )
 col_4.markdown(
@@ -343,6 +386,8 @@ col_4.markdown(
 st.slider(
     "Match", min_value=0, max_value=last_replay_row_idx, key="current_replay_row_idx"
 )
+
+st.button("Reset", on_click=clear_query_params)
 
 # -------------------------------------------------------------------
 
