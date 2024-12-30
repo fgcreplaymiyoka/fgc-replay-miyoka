@@ -57,30 +57,6 @@ def prev_round():
     st.query_params.current_round_id = int(st.query_params.current_round_id) - 1
 
 
-def render_current_row_value(key: str) -> str:
-    global current_row_player_side
-
-    player_side = 1 if key.startswith("p1") else 2
-    value = current_row[key]
-
-    if isinstance(value, numpy.ndarray):
-        value = ", ".join(value)
-
-    if current_row_player_side == player_side:
-        return f"**{value}**"
-
-    return value
-
-
-def play_date_range_changed():
-    st.query_params.play_date_range_changed = True
-    st.query_params.filter_changed = True
-
-
-def filter_changed():
-    st.query_params.filter_changed = True
-
-
 def clear_query_params():
     st.query_params.clear()
 
@@ -118,25 +94,11 @@ if "current_round_id" not in st.query_params:
 result_list = ("all", "wins", "loses")
 
 
-def result_filter_changed():
-    st.query_params.current_result_filter_index = result_list.index(
-        st.session_state.result_filter
-    )
-    st.query_params.filter_changed = True
-
-
 if "current_result_filter_index" not in st.query_params:
     st.query_params.current_result_filter_index = result_list.index("all")
 
 character_list = replay_viewer_helper.get_character_list(replay_dataset)
 character_list = ("all", *character_list)
-
-
-def character_filter_changed():
-    st.query_params.current_character_filter_index = character_list.index(
-        st.session_state.character_filter
-    )
-    st.query_params.filter_changed = True
 
 
 if "current_character_filter_index" not in st.query_params:
@@ -174,15 +136,42 @@ interval_mapping = {
     "Yearly": "YE",
 }
 
+if "interval_option_index" not in st.query_params:
+    st.query_params.interval_option_index = 0
+
+###############################################################################################
+# Callbacks
+###############################################################################################
+
+
+def play_date_range_changed():
+    st.query_params.play_date_range_changed = True
+    st.query_params.filter_changed = True
+
+
+def filter_changed():
+    st.query_params.filter_changed = True
+
+
+def result_filter_changed():
+    st.query_params.current_result_filter_index = result_list.index(
+        st.session_state.result_filter
+    )
+    st.query_params.filter_changed = True
+
+
+def character_filter_changed():
+    st.query_params.current_character_filter_index = character_list.index(
+        st.session_state.character_filter
+    )
+    st.query_params.filter_changed = True
+
 
 def interval_option_changed():
     st.query_params.interval_option_index = list(interval_mapping.keys()).index(
         st.session_state.interval_option
     )
 
-
-if "interval_option_index" not in st.query_params:
-    st.query_params.interval_option_index = 0
 
 ###############################################################################################
 # Login
