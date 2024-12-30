@@ -167,6 +167,22 @@ if "played_after_option_index" not in st.query_params:
     else:
         st.query_params.played_after_option_index = len(played_after_mapping_keys) - 1
 
+interval_mapping = {
+    "Daily": "D",
+    "Weekly": "W",
+    "Monthly": "ME",
+    "Yearly": "YE",
+}
+
+
+def interval_option_changed():
+    st.query_params.interval_option_index = list(interval_mapping.keys()).index(
+        st.session_state.interval_option
+    )
+
+
+if "interval_option_index" not in st.query_params:
+    st.query_params.interval_option_index = 0
 
 ###############################################################################################
 # Login
@@ -180,19 +196,17 @@ if not replay_viewer_helper.check_password():
 ###############################################################################################
 
 with st.sidebar:
+    st.button("Reset", on_click=clear_query_params)
+
     st.subheader("Chart Visualization")
 
     interval_option = st.selectbox(
         "Aggregation Interval",
-        ("Daily", "Weekly", "Monthly", "Yearly"),
+        list(interval_mapping.keys()),
+        on_change=interval_option_changed,
+        index=int(st.query_params.interval_option_index),
+        key="interval_option",
     )
-
-    interval_mapping = {
-        "Daily": "D",
-        "Weekly": "W",
-        "Monthly": "ME",
-        "Yearly": "YE",
-    }
 
     st.subheader("Filters")
 
@@ -274,8 +288,6 @@ with st.sidebar:
     if st.query_params.filter_changed == "True":
         st.query_params.current_replay_row_idx = last_replay_row_idx
         st.query_params.filter_changed = False
-
-    st.button("Reset", on_click=clear_query_params)
 
 current_row = replay_dataset.iloc[int(st.query_params.current_replay_row_idx)]
 current_row_player_side = (
