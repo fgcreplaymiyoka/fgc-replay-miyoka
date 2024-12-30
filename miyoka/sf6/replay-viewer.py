@@ -275,6 +275,8 @@ with st.sidebar:
         st.query_params.current_replay_row_idx = last_replay_row_idx
         st.query_params.filter_changed = False
 
+    st.button("Reset", on_click=clear_query_params)
+
 current_row = replay_dataset.iloc[int(st.query_params.current_replay_row_idx)]
 current_row_player_side = (
     1 if re.match(player_name, current_row["p1_player_name"]) else 2
@@ -384,10 +386,11 @@ col_4.markdown(
 )
 
 st.slider(
-    "Match", min_value=0, max_value=last_replay_row_idx, key="current_replay_row_idx"
+    "Match",
+    min_value=0,
+    max_value=last_replay_row_idx,
+    value=int(st.query_params.current_replay_row_idx),
 )
-
-st.button("Reset", on_click=clear_query_params)
 
 # -------------------------------------------------------------------
 
