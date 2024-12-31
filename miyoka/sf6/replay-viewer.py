@@ -173,6 +173,10 @@ def interval_option_changed():
     )
 
 
+def current_replay_row_idx_changed():
+    st.query_params.current_replay_row_idx = st.session_state.current_replay_row_idx
+
+
 ###############################################################################################
 # Login
 ###############################################################################################
@@ -278,10 +282,12 @@ with st.sidebar:
         st.query_params.current_replay_row_idx = last_replay_row_idx
         st.query_params.filter_changed = False
 
+player_dataset = replay_viewer_helper.get_player_dataset(replay_dataset, player_name)
+
 current_row = replay_dataset.iloc[int(st.query_params.current_replay_row_idx)]
-current_row_player_side = (
-    1 if re.match(player_name, current_row["p1_player_name"]) else 2
-)
+current_row_player_side = player_dataset.iloc[
+    int(st.query_params.current_replay_row_idx)
+]["player_side"]
 replay_id = current_row["replay_id"]
 round_id = int(st.query_params.current_round_id)
 next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row_idx
@@ -391,11 +397,12 @@ st.slider(
     min_value=0,
     max_value=last_replay_row_idx,
     value=int(st.query_params.current_replay_row_idx),
+    key="current_replay_row_idx",
+    on_change=current_replay_row_idx_changed,
 )
 
 # -------------------------------------------------------------------
 
-player_dataset = replay_viewer_helper.get_player_dataset(replay_dataset, player_name)
 base_tooltip = ["match", "rank", "character", "played_at"]
 if not should_redact_pii:
     base_tooltip.append("replay_id")
