@@ -85,9 +85,6 @@ replay_storage: ReplayStorage = load_replay_storage()
 
 last_replay_row_idx = len(replay_dataset) - 1
 
-if "current_replay_row_idx" not in st.query_params:
-    st.query_params.current_replay_row_idx = last_replay_row_idx
-
 if "current_round_id" not in st.query_params:
     st.query_params.current_round_id = 1
 
@@ -103,9 +100,6 @@ character_list = ("all", *character_list)
 
 if "current_character_filter_index" not in st.query_params:
     st.query_params.current_character_filter_index = character_list.index("all")
-
-if "filter_changed" not in st.query_params:
-    st.query_params.filter_changed = True
 
 play_date_range_mapping = {
     "Last 1 day": 1,
@@ -156,25 +150,17 @@ def play_date_range_changed():
         st.session_state.play_date_range_option
     )
 
-    st.query_params.filter_changed = True
-
-
-def filter_changed():
-    st.query_params.filter_changed = True
-
 
 def result_filter_changed():
     st.query_params.current_result_filter_index = result_list.index(
         st.session_state.result_filter
     )
-    st.query_params.filter_changed = True
 
 
 def character_filter_changed():
     st.query_params.current_character_filter_index = character_list.index(
         st.session_state.character_filter
     )
-    st.query_params.filter_changed = True
 
 
 def current_replay_row_idx_changed():
@@ -207,6 +193,9 @@ with st.sidebar:
 
     st.subheader("Filters")
 
+    ###############
+    # Played after: (Select box)
+    ###############
     play_date_range_option = st.selectbox(
         "Played after:",
         play_date_range_mapping_keys,
@@ -225,6 +214,9 @@ with st.sidebar:
             - timedelta(days=play_date_range_mapping[play_date_range_option])
         ).timestamp()
 
+    ###############
+    # Played after: (Slider)
+    ###############
     played_after = st.slider(
         "Played after:",
         value=datetime.fromtimestamp(float(current_played_after)),
@@ -236,7 +228,9 @@ with st.sidebar:
     replay_dataset = replay_dataset[replay_dataset["played_at"] >= played_after]
     last_replay_row_idx = len(replay_dataset) - 1
 
-    # Filter by character
+    ###############
+    # Character: (Select box)
+    ###############
     character_filter = st.selectbox(
         "Character",
         character_list,
@@ -249,7 +243,9 @@ with st.sidebar:
     )
     last_replay_row_idx = len(replay_dataset) - 1
 
-    # Filter by result
+    ###############
+    # Result: (Select box)
+    ###############
     result_filter = st.selectbox(
         "Result",
         result_list,
@@ -262,7 +258,9 @@ with st.sidebar:
     )
     last_replay_row_idx = len(replay_dataset) - 1
 
-    # Filter by match range
+    ###############
+    # Match range: (Slider)
+    ###############
     min_match_range, max_match_range = st.slider(
         "Match range",
         replay_dataset.index[0],
@@ -271,7 +269,6 @@ with st.sidebar:
             replay_dataset.index[0],
             replay_dataset.index[last_replay_row_idx],
         ),
-        on_change=filter_changed,
     )
 
     replay_dataset = replay_dataset[
@@ -280,9 +277,11 @@ with st.sidebar:
     ]
     last_replay_row_idx = len(replay_dataset) - 1
 
-    if st.query_params.filter_changed == "True":
+    if (
+        "current_replay_row_idx" not in st.query_params
+        or int(st.query_params.current_replay_row_idx) > last_replay_row_idx
+    ):
         st.query_params.current_replay_row_idx = last_replay_row_idx
-        st.query_params.filter_changed = False
 
 player_dataset = replay_viewer_helper.get_player_dataset(replay_dataset, player_name)
 
