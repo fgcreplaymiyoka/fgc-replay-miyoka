@@ -91,15 +91,15 @@ if "current_round_id" not in st.query_params:
 result_list = ("all", "wins", "loses")
 
 
-if "current_result_filter_index" not in st.query_params:
-    st.query_params.current_result_filter_index = result_list.index("all")
+if "result_filter" not in st.query_params:
+    st.query_params.result_filter = "all"
 
 character_list = replay_viewer_helper.get_character_list(replay_dataset)
 character_list = ("all", *character_list)
 
 
-if "current_character_filter_index" not in st.query_params:
-    st.query_params.current_character_filter_index = character_list.index("all")
+if "character_filter" not in st.query_params:
+    st.query_params.character_filter = "all"
 
 play_date_range_mapping = {
     "Last 1 day": 1,
@@ -112,17 +112,13 @@ play_date_range_mapping = {
 
 play_date_range_mapping_keys = [key for key in play_date_range_mapping]
 
-if "play_date_range_option_index" not in st.query_params:
+if "play_date_range" not in st.query_params:
     if replay_viewer_helper.default_played_after_filter:
-        st.query_params.play_date_range_option_index = (
-            play_date_range_mapping_keys.index(
-                replay_viewer_helper.default_played_after_filter
-            )
+        st.query_params.play_date_range = (
+            replay_viewer_helper.default_played_after_filter
         )
     else:
-        st.query_params.play_date_range_option_index = (
-            len(play_date_range_mapping_keys) - 1
-        )
+        st.query_params.play_date_range = play_date_range_mapping_keys[-1]
 
 interval_mapping = {
     "Daily": "D",
@@ -131,36 +127,30 @@ interval_mapping = {
     "Yearly": "YE",
 }
 
-if "interval_option_index" not in st.query_params:
-    st.query_params.interval_option_index = 0
+interval_mapping_keys = [key for key in interval_mapping]
+
+if "interval" not in st.query_params:
+    st.query_params.interval = interval_mapping_keys[0]
 
 ###############################################################################################
 # Callbacks
 ###############################################################################################
 
 
-def interval_option_changed():
-    st.query_params.interval_option_index = list(interval_mapping.keys()).index(
-        st.session_state.interval_option
-    )
+def interval_changed():
+    st.query_params.interval = st.session_state.interval
 
 
 def play_date_range_changed():
-    st.query_params.play_date_range_option_index = play_date_range_mapping_keys.index(
-        st.session_state.play_date_range_option
-    )
+    st.query_params.play_date_range = st.session_state.play_date_range
 
 
 def result_filter_changed():
-    st.query_params.current_result_filter_index = result_list.index(
-        st.session_state.result_filter
-    )
+    st.query_params.result_filter = st.session_state.result_filter
 
 
 def character_filter_changed():
-    st.query_params.current_character_filter_index = character_list.index(
-        st.session_state.character_filter
-    )
+    st.query_params.character_filter = st.session_state.character_filter
 
 
 def current_replay_row_idx_changed():
@@ -183,12 +173,12 @@ with st.sidebar:
 
     st.subheader("Chart Visualization")
 
-    interval_option = st.selectbox(
+    interval = st.selectbox(
         "Aggregation Interval",
-        list(interval_mapping.keys()),
-        on_change=interval_option_changed,
-        index=int(st.query_params.interval_option_index),
-        key="interval_option",
+        interval_mapping_keys,
+        on_change=interval_changed,
+        index=interval_mapping_keys.index(st.query_params.interval),
+        key="interval",
     )
 
     st.subheader("Filters")
@@ -196,22 +186,21 @@ with st.sidebar:
     ###############
     # Played after: (Select box)
     ###############
-    play_date_range_option = st.selectbox(
+    play_date_range = st.selectbox(
         "Played after:",
         play_date_range_mapping_keys,
         on_change=play_date_range_changed,
-        index=int(st.query_params.play_date_range_option_index),
-        key="play_date_range_option",
+        index=play_date_range_mapping_keys.index(st.query_params.play_date_range),
+        key="play_date_range",
     )
 
-    if play_date_range_option == "All":
+    if play_date_range == "All":
         current_played_after = (
             replay_dataset.iloc[0]["played_at"].to_pydatetime().timestamp()
         )
     else:
         current_played_after = (
-            datetime.now()
-            - timedelta(days=play_date_range_mapping[play_date_range_option])
+            datetime.now() - timedelta(days=play_date_range_mapping[play_date_range])
         ).timestamp()
 
     ###############
@@ -234,7 +223,7 @@ with st.sidebar:
     character_filter = st.selectbox(
         "Character",
         character_list,
-        index=int(st.query_params.current_character_filter_index),
+        index=character_list.index(st.query_params.character_filter),
         key="character_filter",
         on_change=character_filter_changed,
     )
@@ -249,7 +238,7 @@ with st.sidebar:
     result_filter = st.selectbox(
         "Result",
         result_list,
-        index=int(st.query_params.current_result_filter_index),
+        index=result_list.index(st.query_params.result_filter),
         key="result_filter",
         on_change=result_filter_changed,
     )
@@ -420,7 +409,7 @@ else:
     with tab_date:
         st.altair_chart(
             replay_viewer_helper.get_chart_lp_date(
-                player_dataset, interval_mapping, interval_option
+                player_dataset, interval_mapping, interval
             ),
             use_container_width=True,
         )
@@ -445,7 +434,7 @@ else:
     with tab_date:
         st.altair_chart(
             replay_viewer_helper.get_chart_mr_date(
-                player_dataset, interval_mapping, interval_option
+                player_dataset, interval_mapping, interval
             ),
             use_container_width=True,
         )
@@ -466,13 +455,13 @@ tab_win_rate, tab_match_count = st.tabs(["Win rate", "Match count"])
 
 result_dataset_total = (
     player_dataset[["played_at", "result"]]
-    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval])])
     .count()
 )
 result_dataset_wins = (
     player_dataset[["played_at", "result"]]
     .query("result == 'wins'")
-    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval_option])])
+    .groupby([pd.Grouper(key="played_at", freq=interval_mapping[interval])])
     .count()
 )
 
@@ -511,7 +500,7 @@ opponent_dataset = replay_viewer_helper.get_opponent_dataset(
 )
 
 opponent_dataset_priority = replay_viewer_helper.get_opponent_dataset_priority(
-    opponent_dataset, interval_mapping, interval_option
+    opponent_dataset, interval_mapping, interval
 )
 
 opponent_dataset_priority = opponent_dataset_priority.reset_index()
