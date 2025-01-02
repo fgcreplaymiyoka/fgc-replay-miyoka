@@ -104,13 +104,10 @@ character_list = ("all", *character_list)
 if "current_character_filter_index" not in st.query_params:
     st.query_params.current_character_filter_index = character_list.index("all")
 
-if "play_date_range_changed" not in st.query_params:
-    st.query_params.play_date_range_changed = True
-
 if "filter_changed" not in st.query_params:
     st.query_params.filter_changed = True
 
-played_after_mapping = {
+play_date_range_mapping = {
     "Last 1 day": 1,
     "Last 2 days": 2,
     "Last 7 days": 7,
@@ -119,15 +116,19 @@ played_after_mapping = {
     "All": -1,
 }
 
-played_after_mapping_keys = [key for key in played_after_mapping]
+play_date_range_mapping_keys = [key for key in play_date_range_mapping]
 
-if "played_after_option_index" not in st.query_params:
+if "play_date_range_option_index" not in st.query_params:
     if replay_viewer_helper.default_played_after_filter:
-        st.query_params.played_after_option_index = played_after_mapping_keys.index(
-            replay_viewer_helper.default_played_after_filter
+        st.query_params.play_date_range_option_index = (
+            play_date_range_mapping_keys.index(
+                replay_viewer_helper.default_played_after_filter
+            )
         )
     else:
-        st.query_params.played_after_option_index = len(played_after_mapping_keys) - 1
+        st.query_params.play_date_range_option_index = (
+            len(play_date_range_mapping_keys) - 1
+        )
 
 interval_mapping = {
     "Daily": "D",
@@ -144,8 +145,17 @@ if "interval_option_index" not in st.query_params:
 ###############################################################################################
 
 
+def interval_option_changed():
+    st.query_params.interval_option_index = list(interval_mapping.keys()).index(
+        st.session_state.interval_option
+    )
+
+
 def play_date_range_changed():
-    st.query_params.play_date_range_changed = True
+    st.query_params.play_date_range_option_index = play_date_range_mapping_keys.index(
+        st.session_state.play_date_range_option
+    )
+
     st.query_params.filter_changed = True
 
 
@@ -165,12 +175,6 @@ def character_filter_changed():
         st.session_state.character_filter
     )
     st.query_params.filter_changed = True
-
-
-def interval_option_changed():
-    st.query_params.interval_option_index = list(interval_mapping.keys()).index(
-        st.session_state.interval_option
-    )
 
 
 def current_replay_row_idx_changed():
@@ -203,29 +207,27 @@ with st.sidebar:
 
     st.subheader("Filters")
 
-    played_after_option = st.selectbox(
+    play_date_range_option = st.selectbox(
         "Played after:",
-        played_after_mapping_keys,
+        play_date_range_mapping_keys,
         on_change=play_date_range_changed,
-        index=int(st.query_params.played_after_option_index),
+        index=int(st.query_params.play_date_range_option_index),
+        key="play_date_range_option",
     )
 
-    if st.query_params.play_date_range_changed == "True":
-        if played_after_option == "All":
-            st.query_params.current_played_after = (
-                replay_dataset.iloc[0]["played_at"].to_pydatetime().timestamp()
-            )
-        else:
-            st.query_params.current_played_after = (
-                datetime.now()
-                - timedelta(days=played_after_mapping[played_after_option])
-            ).timestamp()
-
-        st.query_params.play_date_range_changed = False
+    if play_date_range_option == "All":
+        current_played_after = (
+            replay_dataset.iloc[0]["played_at"].to_pydatetime().timestamp()
+        )
+    else:
+        current_played_after = (
+            datetime.now()
+            - timedelta(days=play_date_range_mapping[play_date_range_option])
+        ).timestamp()
 
     played_after = st.slider(
         "Played after:",
-        value=datetime.fromtimestamp(float(st.query_params.current_played_after)),
+        value=datetime.fromtimestamp(float(current_played_after)),
         min_value=replay_dataset.iloc[0]["played_at"],
         max_value=replay_dataset.iloc[last_replay_row_idx]["played_at"],
         format="MM/DD",
