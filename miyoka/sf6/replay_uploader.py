@@ -312,12 +312,12 @@ class ReplayUploader(ReplayUploaderBase):
         p2_rank = self.game_window_helper.identify_rank(frame, player="p2")
         p1_mr, p2_mr = None, None
         p1_lp, p2_lp = None, None
-        if p1_rank == "master":
+        if p1_rank == "master" or p1_rank == "legend":
             p1_mr = self.game_window_helper.identify_mr(frame, player="p1")
         else:
             p1_lp = self.game_window_helper.identify_lp(frame, player="p1")
 
-        if p2_rank == "master":
+        if p2_rank == "master" or p2_rank == "legend":
             p2_mr = self.game_window_helper.identify_mr(frame, player="p2")
         else:
             p2_lp = self.game_window_helper.identify_lp(frame, player="p2")
