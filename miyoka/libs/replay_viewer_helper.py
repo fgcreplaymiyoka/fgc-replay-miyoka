@@ -19,6 +19,8 @@ class ReplayViewerHelper:
         player_name: str,
         time_range: str,
         after_time: str,
+        min_mr_in_chart: int | None,
+        max_mr_in_chart: int | None,
         default_played_after_filter: str,
         debug_mode: bool,
         *args,
@@ -31,6 +33,8 @@ class ReplayViewerHelper:
         self.after_time = after_time
         self.default_played_after_filter = default_played_after_filter
         self._debug_mode = debug_mode
+        self.min_mr_in_chart = min_mr_in_chart or 1000
+        self.max_mr_in_chart = max_mr_in_chart or 2000
 
     @property
     def debug_mode(self):
@@ -149,7 +153,14 @@ class ReplayViewerHelper:
         chart = c + self.get_chart_lp_rules()
         return chart
 
-    def get_chart_mr_date(self, player_dataset, interval_mapping, interval_option):
+    def get_chart_mr_date(
+        self,
+        player_dataset,
+        interval_mapping,
+        interval_option,
+        min_mr_in_chart,
+        max_mr_in_chart,
+    ):
         mr_dataset = (
             player_dataset[["played_at", "mr"]]
             .groupby(
@@ -168,14 +179,20 @@ class ReplayViewerHelper:
                     title=None,
                 ),
                 y=alt.Y("mr:Q", title=None, axis=alt.Axis(format=".0f")).scale(
-                    domain=(1000, 2000)
+                    domain=(min_mr_in_chart, max_mr_in_chart)
                 ),
             )
         )
         return c
 
     def get_chart_mr_match(
-        self, player_dataset, min_match_range, max_match_range, base_tooltip
+        self,
+        player_dataset,
+        min_match_range,
+        max_match_range,
+        base_tooltip,
+        min_mr_in_chart,
+        max_mr_in_chart,
     ):
         c = (
             alt.Chart(player_dataset)
@@ -186,7 +203,9 @@ class ReplayViewerHelper:
                     scale=alt.Scale(domain=[min_match_range, max_match_range]),
                     title=None,
                 ),
-                y=alt.Y("mr:Q", title=None).scale(domain=(1000, 2000)),
+                y=alt.Y("mr:Q", title=None).scale(
+                    domain=(min_mr_in_chart, max_mr_in_chart)
+                ),
                 tooltip=["mr"] + base_tooltip,
                 color=alt.Color(
                     "character:N",

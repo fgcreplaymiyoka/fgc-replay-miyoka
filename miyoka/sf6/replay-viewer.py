@@ -75,6 +75,8 @@ player_name = replay_viewer_helper.player_name
 time_range = replay_viewer_helper.time_range
 after_time = replay_viewer_helper.after_time
 should_redact_pii = replay_viewer_helper.should_redact_pii
+min_mr_in_chart = replay_viewer_helper.min_mr_in_chart
+max_mr_in_chart = replay_viewer_helper.max_mr_in_chart
 
 debug_mode = replay_viewer_helper.debug_mode
 if debug_mode:
@@ -434,7 +436,11 @@ else:
     with tab_date:
         st.altair_chart(
             replay_viewer_helper.get_chart_mr_date(
-                player_dataset, interval_mapping, interval
+                player_dataset,
+                interval_mapping,
+                interval,
+                min_mr_in_chart,
+                max_mr_in_chart,
             ),
             use_container_width=True,
         )
@@ -442,7 +448,12 @@ else:
     with tab_match:
         st.altair_chart(
             replay_viewer_helper.get_chart_mr_match(
-                player_dataset, min_match_range, max_match_range, base_tooltip
+                player_dataset,
+                min_match_range,
+                max_match_range,
+                base_tooltip,
+                min_mr_in_chart,
+                max_mr_in_chart,
             ),
             use_container_width=True,
         )

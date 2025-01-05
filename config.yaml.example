@@ -143,6 +143,9 @@ replay_viewer:
   # Default value of played after filter. One of "Last 1 day", "Last 2 days", "Last 7 days", "Last 14 days", "Last 30 days".
   # If it's not specified, "Last 30 days" is used.
   default_played_after_filter:
+  # Minimum and Maximum value for Master League Point chart
+  min_mr_in_chart: 1000
+  max_mr_in_chart: 2000
 log:
   name: miyoka
   dir_path: logs
