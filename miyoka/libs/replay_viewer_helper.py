@@ -120,8 +120,9 @@ class ReplayViewerHelper:
             .mark_bar(clip=True)
             .encode(
                 x=alt.X(
-                    "monthdate(played_at):O",
+                    "yearmonthdate(played_at):O",
                     title=None,
+                    axis=alt.Axis(format="%b %d"),
                 ),
                 y=alt.Y("lp:Q", title=None, axis=alt.Axis(format=".0f")),
             )
@@ -175,8 +176,9 @@ class ReplayViewerHelper:
             .mark_bar(clip=True)
             .encode(
                 x=alt.X(
-                    "monthdate(played_at):O",
+                    "yearmonthdate(played_at):O",
                     title=None,
+                    axis=alt.Axis(format="%b %d"),
                 ),
                 y=alt.Y("mr:Q", title=None, axis=alt.Axis(format=".0f")).scale(
                     domain=(min_mr_in_chart, max_mr_in_chart)
@@ -399,7 +401,11 @@ class ReplayViewerHelper:
             alt.Chart(opponent_dataset_priority)
             .mark_rect()
             .encode(
-                x=alt.X("monthdate(played_at):O", title=None),
+                x=alt.X(
+                    "yearmonthdate(played_at):O",
+                    title=None,
+                    axis=alt.Axis(format="%b %d"),
+                ),
                 y=alt.Y("character", title=None),
                 color=alt.Color(
                     "priority:Q",
@@ -414,7 +420,11 @@ class ReplayViewerHelper:
             alt.Chart(opponent_dataset_priority)
             .mark_rect()
             .encode(
-                x=alt.X("monthdate(played_at):O", title=None),
+                x=alt.X(
+                    "yearmonthdate(played_at):O",
+                    title=None,
+                    axis=alt.Axis(format="%b %d"),
+                ),
                 y=alt.Y("character", title=None),
                 color=alt.Color(
                     "wins_rate",
@@ -434,7 +444,11 @@ class ReplayViewerHelper:
             alt.Chart(opponent_dataset_priority)
             .mark_rect(clip=True)
             .encode(
-                x=alt.X("monthdate(played_at):O", title=None),
+                x=alt.X(
+                    "yearmonthdate(played_at):O",
+                    title=None,
+                    axis=alt.Axis(format="%b %d"),
+                ),
                 y=alt.Y("character:N", title=None),
                 color=alt.Color("count:Q", legend=alt.Legend(orient="bottom")),
             )
@@ -459,7 +473,11 @@ class ReplayViewerHelper:
             alt.Chart(result_dataset_div)
             .mark_bar(cornerRadius=5)
             .encode(
-                x=alt.X("monthdate(played_at):O", title=None),
+                x=alt.X(
+                    "yearmonthdate(played_at):O",
+                    title=None,
+                    axis=alt.Axis(format="%b %d"),
+                ),
                 y=alt.Y(
                     "wins_rate:Q",
                     title=None,
@@ -485,7 +503,11 @@ class ReplayViewerHelper:
             alt.Chart(result_dataset_total)
             .mark_rect(clip=True)
             .encode(
-                x=alt.X("monthdate(played_at):O", title=None),
+                x=alt.X(
+                    "yearmonthdate(played_at):O",
+                    title=None,
+                    axis=alt.Axis(format="%b %d"),
+                ),
                 y=alt.Y("result:Q", title=None),
             )
         )
