@@ -179,6 +179,8 @@ class Container(containers.DeclarativeContainer):
         player_name=config.replay_viewer.player_name,
         time_range=config.replay_viewer.time_range,
         after_time=config.replay_viewer.after_time,
+        min_mr_in_chart=config.replay_viewer.min_mr_in_chart,
+        max_mr_in_chart=config.replay_viewer.max_mr_in_chart,
         default_played_after_filter=config.replay_viewer.default_played_after_filter,
     )
 
