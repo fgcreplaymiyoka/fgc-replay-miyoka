@@ -374,11 +374,10 @@ st.table(metadata_df)
 
 col_1, col_2, col_3, col_4 = st.columns(4)
 
-if not should_redact_pii:
-    col_1.markdown(
-        f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
-        unsafe_allow_html=True,
-    )
+col_1.markdown(
+    f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
+    unsafe_allow_html=True,
+)
 
 col_2.markdown(
     f"<p class='big-font'>Date: {current_row['played_at']}</p>", unsafe_allow_html=True
@@ -403,9 +402,7 @@ st.slider(
 
 # -------------------------------------------------------------------
 
-base_tooltip = ["match", "rank", "character", "played_at"]
-if not should_redact_pii:
-    base_tooltip.append("replay_id")
+base_tooltip = ["match", "rank", "character", "played_at", "replay_id"]
 
 # -------------------------------------------------------------------
 
