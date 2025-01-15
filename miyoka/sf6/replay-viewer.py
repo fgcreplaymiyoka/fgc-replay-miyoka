@@ -39,22 +39,26 @@ def next_match():
     st.query_params.current_replay_row_idx = (
         int(st.query_params.current_replay_row_idx) + 1
     )
-    st.query_params.current_round_id = 1
+    reset_round()
 
 
 def prev_match():
     st.query_params.current_replay_row_idx = (
         int(st.query_params.current_replay_row_idx) - 1
     )
-    st.query_params.current_round_id = 1
+    reset_round()
 
 
 def next_round():
-    st.query_params.current_round_id = int(st.query_params.current_round_id) + 1
+    st.query_params.round_id = int(st.query_params.round_id) + 1
 
 
 def prev_round():
-    st.query_params.current_round_id = int(st.query_params.current_round_id) - 1
+    st.query_params.round_id = int(st.query_params.round_id) - 1
+
+
+def reset_round():
+    st.query_params.round_id = 1
 
 
 def clear_query_params():
@@ -87,8 +91,8 @@ replay_storage: ReplayStorage = load_replay_storage()
 
 last_replay_row_idx = len(replay_dataset) - 1
 
-if "current_round_id" not in st.query_params:
-    st.query_params.current_round_id = 1
+if "round_id" not in st.query_params:
+    st.query_params.round_id = 1
 
 result_list = ("all", "wins", "loses")
 
@@ -145,18 +149,22 @@ def interval_changed():
 
 def play_date_range_changed():
     st.query_params.play_date_range = st.session_state.play_date_range
+    reset_round()
 
 
 def result_filter_changed():
     st.query_params.result_filter = st.session_state.result_filter
+    reset_round()
 
 
 def character_filter_changed():
     st.query_params.character_filter = st.session_state.character_filter
+    reset_round()
 
 
 def current_replay_row_idx_changed():
     st.query_params.current_replay_row_idx = st.session_state.current_replay_row_idx
+    reset_round()
 
 
 ###############################################################################################
@@ -276,12 +284,24 @@ with st.sidebar:
 
 player_dataset = replay_viewer_helper.get_player_dataset(replay_dataset, player_name)
 
+if len(player_dataset) != len(replay_dataset):
+    st.error(
+        f"""
+        Length of Replay dataset and Player dataset don't match.
+        Please check that the `replay_viewer.player_name` in config.yaml is set correctly.
+        replay_dataset: {len(replay_dataset)}
+        player_dataset: {len(player_dataset)}
+        """
+    )
+    st.stop()
+
 current_row = replay_dataset.iloc[int(st.query_params.current_replay_row_idx)]
 current_row_player_side = player_dataset.iloc[
     int(st.query_params.current_replay_row_idx)
 ]["player_side"]
+
 replay_id = current_row["replay_id"]
-round_id = int(st.query_params.current_round_id)
+round_id = int(st.query_params.round_id)
 next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row_idx
 prev_match_exist = int(st.query_params.current_replay_row_idx) > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
@@ -366,17 +386,16 @@ st.table(metadata_df)
 
 col_1, col_2, col_3, col_4 = st.columns(4)
 
-if not should_redact_pii:
-    col_1.markdown(
-        f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
-        unsafe_allow_html=True,
-    )
+col_1.markdown(
+    f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
+    unsafe_allow_html=True,
+)
 
 col_2.markdown(
     f"<p class='big-font'>Date: {current_row['played_at']}</p>", unsafe_allow_html=True
 )
 col_3.markdown(
-    f"<p class='big-font'>Round: {st.query_params.current_round_id}</p>",
+    f"<p class='big-font'>Round: {st.query_params.round_id}</p>",
     unsafe_allow_html=True,
 )
 col_4.markdown(
@@ -395,9 +414,7 @@ st.slider(
 
 # -------------------------------------------------------------------
 
-base_tooltip = ["match", "rank", "character", "played_at"]
-if not should_redact_pii:
-    base_tooltip.append("replay_id")
+base_tooltip = ["match", "rank", "character", "played_at", "replay_id"]
 
 # -------------------------------------------------------------------
 

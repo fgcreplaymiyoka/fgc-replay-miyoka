@@ -30,4 +30,5 @@ tmp-frames.zip
 scene_store.pkl
 scene-subtitle.vtt
 config.yaml
+config_*.yaml
 .env
