@@ -15,7 +15,8 @@ $service_name = $Env:MIYOKA_GCP_CLOUD_RUN_SERVICE_REPLAY_VIEWER_NAME
 $image = $Env:MIYOKA_GCP_CLOUD_RUN_SERVICE_REPLAY_VIEWER_IMAGE
 $config_path = Join-Path $PSScriptRoot "config.yaml"
 
-gcloud --quiet secrets delete $secret_id
+gcloud --quiet secrets delete $secret_id `
+    --project ${google_cloud_platform_project_id}
 
 gcloud secrets create $secret_id `
     --project ${google_cloud_platform_project_id} `
