@@ -284,10 +284,22 @@ with st.sidebar:
 
 player_dataset = replay_viewer_helper.get_player_dataset(replay_dataset, player_name)
 
+if len(player_dataset) != len(replay_dataset):
+    st.error(
+        f"""
+        Length of Replay dataset and Player dataset don't match.
+        Please check that the `replay_viewer.player_name` in config.yaml is set correctly.
+        replay_dataset: {len(replay_dataset)}
+        player_dataset: {len(player_dataset)}
+        """
+    )
+    st.stop()
+
 current_row = replay_dataset.iloc[int(st.query_params.current_replay_row_idx)]
 current_row_player_side = player_dataset.iloc[
     int(st.query_params.current_replay_row_idx)
 ]["player_side"]
+
 replay_id = current_row["replay_id"]
 round_id = int(st.query_params.round_id)
 next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row_idx

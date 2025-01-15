@@ -38,3 +38,20 @@ After the deployment succeeds, get URL to your replay-viewer.
 You can create a bookmark to the URL in your mobile phone so that it's easy to access.
 
 In addition to the initial deployment, you should re-deploy when you changed `replay_viewer` setting in `config.yml` file.
+
+## Troubleshooting
+
+### Replay Viewer stopped working after I changed my player name in the game
+
+If you have changed your player name in the game, you might encounter the following error:
+
+```plaintext
+Length of Replay dataset and Player dataset don't match. Please check that the replay_viewer.player_name in config.yaml is set correctly.
+```
+
+To resolve this error, register both your new name and old name to the `replay_viewer.player_name` in config.yaml. For example:
+
+```yaml
+replay_viewer:
+    player_name: MyNewNmae|MyOldNmae
+```
