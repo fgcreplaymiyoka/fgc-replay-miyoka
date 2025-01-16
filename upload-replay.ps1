@@ -1,5 +1,8 @@
 Write-Host "Running replay uploader..."
 
+# Make UTF8 default encoding in Python, otherwise multi-byte chracters in config.yaml can't be loaded in Windows.
+# https://stackoverflow.com/a/50933341
+$Env:PYTHONUTF8 = "1"
 
 $obs_process_name = "obs64"
 $is_obs_running = Get-Process -Name $obs_process_name -ErrorAction SilentlyContinue
