@@ -261,9 +261,11 @@ class ReplayViewerHelper:
         ]
 
     def get_character_list(self, replay_dataset):
-        return pd.concat(
-            [replay_dataset["p1_character"], replay_dataset["p2_character"]]
-        ).unique()
+        return (
+            pd.concat([replay_dataset["p1_character"], replay_dataset["p2_character"]])
+            .sort_values()
+            .unique()
+        )
 
     def get_player_dataset(self, replay_dataset, player_name):
         p1_player_dataset = replay_dataset[
