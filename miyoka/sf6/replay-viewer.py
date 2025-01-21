@@ -104,19 +104,6 @@ result_list = ("all", "wins", "loses")
 if "result_filter" not in st.query_params:
     st.query_params.result_filter = "all"
 
-my_character_list = (
-    replay_viewer_helper.get_player_dataset(replay_dataset, player_name)["character"]
-    .sort_values()
-    .unique()
-)
-my_character_list = ("all", *my_character_list)
-opponent_character_list = (
-    replay_viewer_helper.get_opponent_dataset(replay_dataset, player_name)["character"]
-    .sort_values()
-    .unique()
-)
-opponent_character_list = ("all", *opponent_character_list)
-
 if "my_character_filter" not in st.query_params:
     st.query_params.my_character_filter = "all"
 
@@ -257,6 +244,14 @@ with st.sidebar:
     ###############
     # My character: (Select box)
     ###############
+    my_character_list = (
+        replay_viewer_helper.get_player_dataset(replay_dataset, player_name)[
+            "character"
+        ]
+        .sort_values()
+        .unique()
+    )
+    my_character_list = ("all", *my_character_list)
     my_character_filter = st.selectbox(
         "My character",
         my_character_list,
@@ -272,6 +267,14 @@ with st.sidebar:
     ###############
     # Opponent character: (Select box)
     ###############
+    opponent_character_list = (
+        replay_viewer_helper.get_opponent_dataset(replay_dataset, player_name)[
+            "character"
+        ]
+        .sort_values()
+        .unique()
+    )
+    opponent_character_list = ("all", *opponent_character_list)
     opponent_character_filter = st.selectbox(
         "Opponent character",
         opponent_character_list,
