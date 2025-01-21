@@ -65,6 +65,10 @@ def clear_query_params():
     st.query_params.clear()
 
 
+def reset_current_replay_row_idx():
+    del st.query_params["current_replay_row_idx"]
+
+
 def highlight_cols(s):
     return "font-weight: bold"
 
@@ -161,16 +165,19 @@ def interval_changed():
 
 def play_date_range_changed():
     st.query_params.play_date_range = st.session_state.play_date_range
+    reset_current_replay_row_idx()
     reset_round()
 
 
 def result_filter_changed():
     st.query_params.result_filter = st.session_state.result_filter
+    reset_current_replay_row_idx()
     reset_round()
 
 
 def my_character_filter_changed():
     st.query_params.my_character_filter = st.session_state.my_character_filter
+    reset_current_replay_row_idx()
     reset_round()
 
 
@@ -178,6 +185,7 @@ def opponent_character_filter_changed():
     st.query_params.opponent_character_filter = (
         st.session_state.opponent_character_filter
     )
+    reset_current_replay_row_idx()
     reset_round()
 
 
