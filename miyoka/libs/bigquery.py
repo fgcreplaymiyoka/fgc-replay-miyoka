@@ -145,6 +145,7 @@ class ReplayDataset(BaseBqClient):
         FROM `{table_id}`
         WHERE {" AND ".join(where_clauses)}
         ORDER BY JSON_VALUE(metadata.played_at) ASC, recorded_at DESC
+        LIMIT 5
         """
         ).to_dataframe()
 
