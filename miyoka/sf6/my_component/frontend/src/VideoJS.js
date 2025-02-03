@@ -5,7 +5,7 @@ import 'video.js/dist/video-js.css';
 export const VideoJS = (props) => {
   const videoRef = React.useRef(null);
   const playerRef = React.useRef(null);
-  const {options, onReady} = props;
+  const {options, onReady, onUpdate} = props;
 
   React.useEffect(() => {
     console.log('options changed', options);
@@ -39,6 +39,8 @@ export const VideoJS = (props) => {
 
       // player.autoplay(options.autoplay);
       player.src(options.sources);
+
+      onUpdate && onUpdate(player);
     }
   }, [options, videoRef]);
 

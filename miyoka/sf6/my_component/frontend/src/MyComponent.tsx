@@ -17,11 +17,12 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   const { video_url } = args
 
-  console.log("MyComponent init");
+  console.log("MyComponent function calling");
   // console.log("theme", theme)
   const playerRef = React.useRef<Player | null>(null);
   const playPauseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const videoJsOptions = {
+  const speedDropdownButtonRef = useRef<HTMLDivElement | null>(null);
+  const initialVideoJsOptions = {
     autoplay: 'muted',
     controls: true,
     responsive: true,
@@ -35,7 +36,8 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
 
   // const [isFocused, setIsFocused] = useState(false)
   // const [numClicks, setNumClicks] = useState(0)
-  const [speed, setSpeed] = useState(1)
+  const [videoJsOptions, setVideoJsOptions] = useState(initialVideoJsOptions);
+  const [playbackRate, setPlaybackRate] = useState(1)
 
   const style: React.CSSProperties = useMemo(() => {
     if (!theme) return {}
@@ -60,6 +62,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
 
     // Start from the 1st second
     player.currentTime(1);
+    player.playbackRate(playbackRate);
 
     // You can handle player events here, for example:
     player.on('waiting', () => {
@@ -81,9 +84,30 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     });
   };
 
+  const handlePlayerUpdate = (player: Player) => {
+    playerRef.current = player;
+
+    console.log("handlePlayerUpdate", player.currentTime());
+
+    // Start from the 1st second
+    player.currentTime(1);
+    console.log("playbackRate", playbackRate)
+    player.playbackRate(playbackRate);
+  };
+
   // useEffect(() => {
   //   Streamlit.setComponentValue(numClicks)
   // }, [numClicks])
+
+  useEffect(() => {
+    setVideoJsOptions({
+      ...videoJsOptions,
+      sources: [{
+        src: video_url,
+        type: 'video/mp4'
+      }]
+    });
+  }, [video_url]);
 
   // setFrameHeight should be called on first render and evertime the size might change (e.g. due to a DOM update).
   // Adding the style and theme here since they might effect the visual size of the component.
@@ -118,11 +142,12 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   }, []);
 
   const changeSpeed = useCallback((rate: number): void => {
+    console.log("changeSpeed", rate)
     const player = playerRef.current;
     if (player) {
       player.playbackRate(rate);
     }
-    // setSpeed(rate);
+    setPlaybackRate(rate);
   }, []);
 
   // /** Focus handler for our "Click Me!" button. */
@@ -160,7 +185,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   // )
   return (
     <>
-      <VideoJS options={videoJsOptions} onReady={handlePlayerReady} />
+      <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <button style={style} ref={playPauseButtonRef} onClick={onClicked}>Play</button>
       <button style={style} onClick={() => movePosition(-0.016)}>-1 frame</button>
       <button style={style} onClick={() => movePosition(0.016)}>+1 frame</button>
@@ -172,7 +197,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
       <button style={style} onClick={() => changeSpeed(1)}>1X</button>
       <button style={style} onClick={() => changeSpeed(1.5)}>1.5X</button>
       <button style={style} onClick={() => changeSpeed(2)}>2X</button>
-      <DropdownButton id="dropdown-basic-button" title={`${speed}X`} size="sm">
+      <DropdownButton ref={speedDropdownButtonRef} title={`${playbackRate}X`} size="sm">
         <Dropdown.Item onClick={() => changeSpeed(0.25)} href="#/action-1">0.25X</Dropdown.Item>
         <Dropdown.Item onClick={() => changeSpeed(0.5)} href="#/action-2">0.5X</Dropdown.Item>
         <Dropdown.Item onClick={() => changeSpeed(1)} href="#/action-3">1X</Dropdown.Item>
