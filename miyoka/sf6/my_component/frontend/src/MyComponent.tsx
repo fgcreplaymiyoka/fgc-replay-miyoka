@@ -60,13 +60,15 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   const handlePlayerReady = (player: Player) => {
     playerRef.current = player;
 
-    // Start from the 1st second
-    player.currentTime(1);
-    player.playbackRate(playbackRate);
-
     // You can handle player events here, for example:
+    // https://gist.github.com/alexrqs/a6db03bade4dc405a61c63294a64f97a
     player.on('waiting', () => {
       videojs.log('player is waiting');
+    });
+
+    player.on('ratechange', function () {
+      videojs.log('player rate is changed');
+      setPlaybackRate(player.playbackRate() ?? 1);
     });
 
     player.on('dispose', () => {
@@ -82,17 +84,39 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
       videojs.log('player is paused');
       playPauseButtonRef.current!.innerHTML = "play";
     });
+
+    player.on('ended', function () {
+      videojs.log('player is ended');
+    });
+
+    player.on('error', function () {
+      videojs.log('player is error');
+    });
+
+    player.on('loadeddata', function () {
+      videojs.log('player is loadeddata');
+    });
+
+    player.on('loadstart', function () {
+      videojs.log('player is loadstart');
+      player.currentTime(1);
+    });
+
+    player.on('stalled', function () {
+      videojs.log('player is stalled');
+    });
+
+    player.on('firstplay', function () {
+      videojs.log('player is firstplay');
+    });
+
+    player.on('playerreset', function () {
+      videojs.log('player is playerreset');
+    });
   };
 
   const handlePlayerUpdate = (player: Player) => {
     playerRef.current = player;
-
-    console.log("handlePlayerUpdate", player.currentTime());
-
-    // Start from the 1st second
-    player.currentTime(1);
-    console.log("playbackRate", playbackRate)
-    player.playbackRate(playbackRate);
   };
 
   // useEffect(() => {
@@ -147,7 +171,6 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     if (player) {
       player.playbackRate(rate);
     }
-    setPlaybackRate(rate);
   }, []);
 
   // /** Focus handler for our "Click Me!" button. */
@@ -187,16 +210,12 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     <>
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <button style={style} ref={playPauseButtonRef} onClick={onClicked}>Play</button>
-      <button style={style} onClick={() => movePosition(-0.016)}>-1 frame</button>
-      <button style={style} onClick={() => movePosition(0.016)}>+1 frame</button>
-      <button style={style} onClick={() => movePosition(-1)}>-1 sec</button>
-      <button style={style} onClick={() => movePosition(1)}>+1 sec</button>
-      <button style={style} onClick={() => movePosition(5)}>+5 sec</button>
-      <button style={style} onClick={() => changeSpeed(0.25)}>0.25X</button>
-      <button style={style} onClick={() => changeSpeed(0.5)}>0.5X</button>
-      <button style={style} onClick={() => changeSpeed(1)}>1X</button>
-      <button style={style} onClick={() => changeSpeed(1.5)}>1.5X</button>
-      <button style={style} onClick={() => changeSpeed(2)}>2X</button>
+      <button style={style} onClick={() => movePosition(-0.016)}>-1f</button>
+      <button style={style} onClick={() => movePosition(0.016)}>+1f</button>
+      <button style={style} onClick={() => movePosition(-0.16)}>-10f</button>
+      <button style={style} onClick={() => movePosition(0.16)}>+10f</button>
+      <button style={style} onClick={() => movePosition(-1)}>-1s</button>
+      <button style={style} onClick={() => movePosition(1)}>+1s</button>
       <DropdownButton ref={speedDropdownButtonRef} title={`${playbackRate}X`} size="sm">
         <Dropdown.Item onClick={() => changeSpeed(0.25)} href="#/action-1">0.25X</Dropdown.Item>
         <Dropdown.Item onClick={() => changeSpeed(0.5)} href="#/action-2">0.5X</Dropdown.Item>
