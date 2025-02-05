@@ -65,6 +65,10 @@ def clear_query_params():
     st.query_params.clear()
 
 
+def reset_current_replay_row_idx():
+    del st.query_params["current_replay_row_idx"]
+
+
 def highlight_cols(s):
     return "font-weight: bold"
 
@@ -100,12 +104,11 @@ result_list = ("all", "wins", "loses")
 if "result_filter" not in st.query_params:
     st.query_params.result_filter = "all"
 
-character_list = replay_viewer_helper.get_character_list(replay_dataset)
-character_list = ("all", *character_list)
+if "my_character_filter" not in st.query_params:
+    st.query_params.my_character_filter = "all"
 
-
-if "character_filter" not in st.query_params:
-    st.query_params.character_filter = "all"
+if "opponent_character_filter" not in st.query_params:
+    st.query_params.opponent_character_filter = "all"
 
 play_date_range_mapping = {
     "Last 1 day": 1,
@@ -149,16 +152,27 @@ def interval_changed():
 
 def play_date_range_changed():
     st.query_params.play_date_range = st.session_state.play_date_range
+    reset_current_replay_row_idx()
     reset_round()
 
 
 def result_filter_changed():
     st.query_params.result_filter = st.session_state.result_filter
+    reset_current_replay_row_idx()
     reset_round()
 
 
-def character_filter_changed():
-    st.query_params.character_filter = st.session_state.character_filter
+def my_character_filter_changed():
+    st.query_params.my_character_filter = st.session_state.my_character_filter
+    reset_current_replay_row_idx()
+    reset_round()
+
+
+def opponent_character_filter_changed():
+    st.query_params.opponent_character_filter = (
+        st.session_state.opponent_character_filter
+    )
+    reset_current_replay_row_idx()
     reset_round()
 
 
@@ -228,17 +242,48 @@ with st.sidebar:
     last_replay_row_idx = len(replay_dataset) - 1
 
     ###############
-    # Character: (Select box)
+    # My character: (Select box)
     ###############
-    character_filter = st.selectbox(
-        "Character",
-        character_list,
-        index=character_list.index(st.query_params.character_filter),
-        key="character_filter",
-        on_change=character_filter_changed,
+    my_character_list = (
+        replay_viewer_helper.get_player_dataset(replay_dataset, player_name)[
+            "character"
+        ]
+        .sort_values()
+        .unique()
     )
-    replay_dataset = replay_viewer_helper.filter_replay_dataset_by_character(
-        character_filter, replay_dataset, player_name
+    my_character_list = ("all", *my_character_list)
+    my_character_filter = st.selectbox(
+        "My character",
+        my_character_list,
+        index=my_character_list.index(st.query_params.my_character_filter),
+        key="my_character_filter",
+        on_change=my_character_filter_changed,
+    )
+    replay_dataset = replay_viewer_helper.filter_replay_dataset_by_my_character(
+        my_character_filter, replay_dataset, player_name
+    )
+    last_replay_row_idx = len(replay_dataset) - 1
+
+    ###############
+    # Opponent character: (Select box)
+    ###############
+    opponent_character_list = (
+        replay_viewer_helper.get_opponent_dataset(replay_dataset, player_name)[
+            "character"
+        ]
+        .sort_values()
+        .unique()
+    )
+    opponent_character_list = ("all", *opponent_character_list)
+    opponent_character_filter = st.selectbox(
+        "Opponent character",
+        opponent_character_list,
+        index=opponent_character_list.index(st.query_params.opponent_character_filter),
+        key="opponent_character_filter",
+        on_change=opponent_character_filter_changed,
+    )
+    replay_dataset = replay_viewer_helper.filter_replay_dataset_by_opponent_character(
+        opponent_character_filter, replay_dataset, player_name
     )
     last_replay_row_idx = len(replay_dataset) - 1
 
