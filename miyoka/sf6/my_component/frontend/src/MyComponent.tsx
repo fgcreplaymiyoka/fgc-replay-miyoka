@@ -21,7 +21,8 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   // console.log("theme", theme)
   const playerRef = React.useRef<Player | null>(null);
   const playPauseButtonRef = useRef<HTMLButtonElement | null>(null);
-  const speedDropdownButtonRef = useRef<HTMLDivElement | null>(null);
+  const playbackRateDropdownButtonRef = useRef<HTMLDivElement | null>(null);
+  const moveUnitDropdownButtonRef = useRef<HTMLDivElement | null>(null);
   const initialVideoJsOptions = {
     autoplay: 'muted',
     controls: true,
@@ -38,6 +39,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   // const [numClicks, setNumClicks] = useState(0)
   const [videoJsOptions, setVideoJsOptions] = useState(initialVideoJsOptions);
   const [playbackRate, setPlaybackRate] = useState(1)
+  const [moveUnit, setMoveUnit] = useState('second')
 
   const style: React.CSSProperties = useMemo(() => {
     if (!theme) return {}
@@ -161,16 +163,44 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     }
   }, []);
 
+  const movePosition2 = useCallback((direction: string): void => {
+    const player = playerRef.current;
+    if (player) {
+      var currentTime = player?.currentTime() ?? 0
+      var moveValue = 1
+
+      switch (moveUnit) {
+        case "frame":
+          moveValue = 0.016
+          break;
+        case "second":
+          moveValue = 1
+          break;
+      }
+
+      if (direction === "forward") {
+        player.currentTime(currentTime + moveValue);
+      } else {
+        player.currentTime(currentTime - moveValue);
+      }
+    }
+  }, [moveUnit]);
+
   const setComponentValue = useCallback((action: string): void => {
     Streamlit.setComponentValue(action)
   }, []);
 
-  const changeSpeed = useCallback((rate: number): void => {
-    console.log("changeSpeed", rate)
+  const changePlaybackRate = useCallback((rate: number): void => {
+    console.log("changePlaybackRate", rate)
     const player = playerRef.current;
     if (player) {
       player.playbackRate(rate);
     }
+  }, []);
+
+  const changeMoveUnit = useCallback((unit: string): void => {
+    console.log("changeMoveUnit", unit)
+    setMoveUnit(unit);
   }, []);
 
   // /** Focus handler for our "Click Me!" button. */
@@ -210,18 +240,18 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     <>
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <button style={style} ref={playPauseButtonRef} onClick={onClicked}>Play</button>
-      <button style={style} onClick={() => movePosition(-0.016)}>-1f</button>
-      <button style={style} onClick={() => movePosition(0.016)}>+1f</button>
-      <button style={style} onClick={() => movePosition(-0.16)}>-10f</button>
-      <button style={style} onClick={() => movePosition(0.16)}>+10f</button>
-      <button style={style} onClick={() => movePosition(-1)}>-1s</button>
-      <button style={style} onClick={() => movePosition(1)}>+1s</button>
-      <DropdownButton ref={speedDropdownButtonRef} title={`${playbackRate}X`} size="sm">
-        <Dropdown.Item onClick={() => changeSpeed(0.25)} href="#/action-1">0.25X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changeSpeed(0.5)} href="#/action-2">0.5X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changeSpeed(1)} href="#/action-3">1X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changeSpeed(1.5)} href="#/action-3">1.5X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changeSpeed(2)} href="#/action-3">2X</Dropdown.Item>
+      <button style={style} onClick={() => movePosition2("backward")}>⬅️</button>
+      <button style={style} onClick={() => movePosition2("forward")}>➡️</button>
+      <DropdownButton ref={moveUnitDropdownButtonRef} title={`Unit: ${moveUnit}`} size="sm">
+        <Dropdown.Item onClick={() => changeMoveUnit('frame')}>frame</Dropdown.Item>
+        <Dropdown.Item onClick={() => changeMoveUnit('second')}>second</Dropdown.Item>
+      </DropdownButton>
+      <DropdownButton ref={playbackRateDropdownButtonRef} title={`Speed: ${playbackRate}x`} size="sm">
+        <Dropdown.Item onClick={() => changePlaybackRate(0.25)}>0.25X</Dropdown.Item>
+        <Dropdown.Item onClick={() => changePlaybackRate(0.5)}>0.5X</Dropdown.Item>
+        <Dropdown.Item onClick={() => changePlaybackRate(1)}>1X</Dropdown.Item>
+        <Dropdown.Item onClick={() => changePlaybackRate(1.5)}>1.5X</Dropdown.Item>
+        <Dropdown.Item onClick={() => changePlaybackRate(2)}>2X</Dropdown.Item>
       </DropdownButton>
     </>
   );
