@@ -63,6 +63,7 @@ class ReplayUploader(ReplayUploaderBase):
         self.current_replay_id = None
         self.replay_rewind_count = 5
         self.in_replay = False
+        self.is_recording = False
         self.replay_done = False
         self.round = 0
         self.recorded_replay_count = 0
@@ -95,17 +96,31 @@ class ReplayUploader(ReplayUploaderBase):
             raise e
 
     def _run(self):
-        tab_repeat_mode = False
         g_repeat_mode = False
 
         while True:
             frame = self.game_window_helper.grab_frame()
 
             if self.in_replay:
-                if (
-                    tab_repeat_mode == False
-                    and not self.game_window_helper.is_replay_options_exist(frame)
-                ):
+                is_replay_options_in_round_exist = self.game_window_helper.is_replay_options_in_round_exist(frame)
+
+                if is_replay_options_in_round_exist and not self.is_recording:
+                    self.is_recording = True
+
+                    pydirectinput.press("r")  # Pause
+                    for _ in range(self.replay_rewind_count):
+                        pydirectinput.press(
+                            "z"
+                        )  # Previous Scene - Rolling back to the beginning of the game.
+
+                    # Start recording
+                    subprocess.run(["obs-cmd-windows-amd64.exe", "recording", "start"])
+
+                    time.sleep(2)
+
+                    pydirectinput.press("r")  # Resume
+
+                if not is_replay_options_in_round_exist and self.is_recording:
                     # Stop recording
                     ret = subprocess.run(
                         ["obs-cmd-windows-amd64.exe", "recording", "stop"],
@@ -130,7 +145,7 @@ class ReplayUploader(ReplayUploaderBase):
                         delete_original=True,
                         initial_delay_sec=5,  # Wait for 5 seconds before starts uploading, becuase OBS might not have finished exporting the file.
                     )
-                    tab_repeat_mode = True
+                    self.is_recording = False
                     self.round += 1
 
             screen = self.game_window_helper.identify_screen(frame)
@@ -140,12 +155,10 @@ class ReplayUploader(ReplayUploaderBase):
             match screen:
                 case "TitleScreen":
                     self.in_replay = False
-                    tab_repeat_mode = False
                     g_repeat_mode = False
                     pydirectinput.press("Tab")  # Press Any Button
                 case "MainBh":
                     self.in_replay = False
-                    tab_repeat_mode = False
                     g_repeat_mode = False
                     pydirectinput.press("Tab")  # Open menu
                     time.sleep(3)
@@ -213,30 +226,11 @@ class ReplayUploader(ReplayUploaderBase):
                     pydirectinput.press("f")  # Enter - Start watching replay
 
                     # For showing reply menu and skipping opening
-                    tab_repeat_mode = True
-                    self.round = 1
-                    self.recorded_replay_count += 1
-                case "ReplayMenu":
-                    tab_repeat_mode = False
                     g_repeat_mode = True
                     self.in_replay = True
-
-                    pydirectinput.press("Tab")  # Close replay menu
-
-                    time.sleep(1)
-
-                    pydirectinput.press("r")  # Pause
-                    for _ in range(self.replay_rewind_count):
-                        pydirectinput.press(
-                            "z"
-                        )  # Previous Scene - Rolling back to the beginning of the game.
-
-                    # Start recording
-                    subprocess.run(["obs-cmd-windows-amd64.exe", "recording", "start"])
-
-                    time.sleep(2)
-
-                    pydirectinput.press("r")  # Resume
+                    self.is_recording = False
+                    self.round = 1
+                    self.recorded_replay_count += 1
                 case "ReplayEndDiaglogPlayAgain":
                     self.in_replay = False
                     g_repeat_mode = False
@@ -278,12 +272,13 @@ class ReplayUploader(ReplayUploaderBase):
 
             # time.sleep(0.2)
 
-            if tab_repeat_mode:
-                pydirectinput.press("Tab")
             if g_repeat_mode:
                 pydirectinput.press("g")
 
             time.sleep(0.3)
+
+            if g_repeat_mode:
+                pydirectinput.press("g")
 
     def extract_replay_summary(self, frame) -> bool:
         current_replay_id = self.game_window_helper.identify_replay_id(frame)

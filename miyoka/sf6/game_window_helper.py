@@ -46,6 +46,23 @@ class GameWindowHelper(GameWindowHelperBase):
 
         print(f"option: {option}")
         return option != ""
+    
+    def is_replay_options_in_round_exist(self, image):
+        roi = (326, 704, 635, 100)
+
+        (x, y, width, height) = roi
+        cropped_image = image[y : y + height, x : x + width]
+
+        self.save_image(
+            cropped_image, f"last_images/is_replay_options_in_round_exist/image.jpeg"
+        )
+
+        option, _ = self.identify_in_screen(
+            cropped_image, self.templates_dir("replay_options_in_round"), threthold=0.85
+        )
+
+        print(f"option: {option}")
+        return option != ""
 
     def is_replay_started(self, image):
         roi = (605, 174, 76, 57)
