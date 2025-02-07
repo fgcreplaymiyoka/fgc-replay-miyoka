@@ -40,6 +40,8 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   const [videoJsOptions, setVideoJsOptions] = useState(initialVideoJsOptions);
   const [playbackRate, setPlaybackRate] = useState(1)
   const [moveUnit, setMoveUnit] = useState('second')
+  // https://dirask-react.medium.com/react-mouse-button-press-and-hold-example-9f749300f71a
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const style: React.CSSProperties = useMemo(() => {
     if (!theme) return {}
@@ -155,15 +157,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     }
   }, [])
 
-  const movePosition = useCallback((seconds: number): void => {
-    const player = playerRef.current;
-    if (player) {
-      var currentTime = player?.currentTime() ?? 0
-      player.currentTime(currentTime + seconds);
-    }
-  }, []);
-
-  const movePosition2 = useCallback((direction: string): void => {
+  const movePosition = useCallback((direction: string): void => {
     const player = playerRef.current;
     if (player) {
       var currentTime = player?.currentTime() ?? 0
@@ -203,6 +197,20 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     setMoveUnit(unit);
   }, []);
 
+  const startMoving = (direction: string) => {
+    if (intervalRef.current) return;
+    intervalRef.current = setInterval(() => {
+      movePosition(direction);
+    }, 100); // Adjust the interval time as needed
+  };
+
+  const stopMoving = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  };
+
   // /** Focus handler for our "Click Me!" button. */
   // const onFocus = useCallback((): void => {
   //   setIsFocused(true)
@@ -240,8 +248,8 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     <>
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <button style={style} ref={playPauseButtonRef} onClick={onClicked}>Play</button>
-      <button style={style} onClick={() => movePosition2("backward")}>⬅️</button>
-      <button style={style} onClick={() => movePosition2("forward")}>➡️</button>
+      <button style={style} onMouseDown={() => startMoving("backward")} onTouchStart={() => startMoving("backward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving}>⬅️</button>
+      <button style={style} onMouseDown={() => startMoving("forward")} onTouchStart={() => startMoving("forward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving}>➡️</button>
       <DropdownButton ref={moveUnitDropdownButtonRef} title={`Unit: ${moveUnit}`} size="sm">
         <Dropdown.Item onClick={() => changeMoveUnit('frame')}>frame</Dropdown.Item>
         <Dropdown.Item onClick={() => changeMoveUnit('second')}>second</Dropdown.Item>
