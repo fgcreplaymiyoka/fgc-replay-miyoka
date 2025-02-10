@@ -9,6 +9,7 @@ import videojs from 'video.js';
 import Player from 'video.js/dist/types/player';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import Button from 'react-bootstrap/Button';
 
 /**
  * This is a React-based component template. The passed props are coming from the 
@@ -81,12 +82,12 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
 
     player.on('play', function () {
       videojs.log('player is played');
-      playPauseButtonRef.current!.innerHTML = "pause";
+      playPauseButtonRef.current!.innerHTML = "⏸️";
     });
 
     player.on('pause', function () {
       videojs.log('player is paused');
-      playPauseButtonRef.current!.innerHTML = "play";
+      playPauseButtonRef.current!.innerHTML = "▶️";
     });
 
     player.on('ended', function () {
@@ -244,23 +245,31 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   //     Hello, {video_url}! &nbsp;
   //   </span>
   // )
+  const containerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '1px', // Adjust the gap between elements as needed
+  };
+
   return (
     <>
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
-      <button style={style} ref={playPauseButtonRef} onClick={onClicked}>Play</button>
-      <button style={style} onMouseDown={() => startMoving("backward")} onTouchStart={() => startMoving("backward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving}>⬅️</button>
-      <button style={style} onMouseDown={() => startMoving("forward")} onTouchStart={() => startMoving("forward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving}>➡️</button>
-      <DropdownButton ref={moveUnitDropdownButtonRef} title={`Unit: ${moveUnit}`} size="sm">
-        <Dropdown.Item onClick={() => changeMoveUnit('frame')}>frame</Dropdown.Item>
-        <Dropdown.Item onClick={() => changeMoveUnit('second')}>second</Dropdown.Item>
-      </DropdownButton>
-      <DropdownButton ref={playbackRateDropdownButtonRef} title={`Speed: ${playbackRate}x`} size="sm">
-        <Dropdown.Item onClick={() => changePlaybackRate(0.25)}>0.25X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changePlaybackRate(0.5)}>0.5X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changePlaybackRate(1)}>1X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changePlaybackRate(1.5)}>1.5X</Dropdown.Item>
-        <Dropdown.Item onClick={() => changePlaybackRate(2)}>2X</Dropdown.Item>
-      </DropdownButton>
+      <div style={containerStyle}>
+        <Button style={style} ref={playPauseButtonRef} onClick={onClicked} variant="light">▶️</Button>
+        <Button style={style} onMouseDown={() => startMoving("backward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchStart={() => startMoving("backward")} onTouchEnd={stopMoving} variant="light">⬅️</Button>
+        <Button style={style} onMouseDown={() => startMoving("forward")} onTouchStart={() => startMoving("forward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving} variant="light">➡️</Button>
+        <DropdownButton style={style} variant="light" ref={moveUnitDropdownButtonRef} title={`Unit: ${moveUnit}`} size="sm">
+          <Dropdown.Item onClick={() => changeMoveUnit('frame')}>frame</Dropdown.Item>
+          <Dropdown.Item onClick={() => changeMoveUnit('second')}>second</Dropdown.Item>
+        </DropdownButton>
+        <DropdownButton style={style} variant="light" ref={playbackRateDropdownButtonRef} title={`Speed: ${playbackRate}x`} size="sm">
+          <Dropdown.Item onClick={() => changePlaybackRate(0.25)}>0.25X</Dropdown.Item>
+          <Dropdown.Item onClick={() => changePlaybackRate(0.5)}>0.5X</Dropdown.Item>
+          <Dropdown.Item onClick={() => changePlaybackRate(1)}>1X</Dropdown.Item>
+          <Dropdown.Item onClick={() => changePlaybackRate(1.5)}>1.5X</Dropdown.Item>
+          <Dropdown.Item onClick={() => changePlaybackRate(2)}>2X</Dropdown.Item>
+        </DropdownButton>
+      </div>
     </>
   );
 }
