@@ -19,7 +19,6 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   const { video_url } = args
 
   console.log("MyComponent function calling");
-  // console.log("theme", theme)
   const playerRef = React.useRef<Player | null>(null);
   const playPauseButtonRef = useRef<HTMLButtonElement | null>(null);
   const playbackRateDropdownButtonRef = useRef<HTMLDivElement | null>(null);
@@ -36,8 +35,6 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     }]
   };
 
-  // const [isFocused, setIsFocused] = useState(false)
-  // const [numClicks, setNumClicks] = useState(0)
   const [videoJsOptions, setVideoJsOptions] = useState(initialVideoJsOptions);
   const [playbackRate, setPlaybackRate] = useState(1)
   const [moveUnit, setMoveUnit] = useState('second')
@@ -124,10 +121,6 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     playerRef.current = player;
   };
 
-  // useEffect(() => {
-  //   Streamlit.setComponentValue(numClicks)
-  // }, [numClicks])
-
   useEffect(() => {
     setVideoJsOptions({
       ...videoJsOptions,
@@ -149,8 +142,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   }, [theme])
 
   /** Click handler for our "Click Me!" button. */
-  const onClicked = useCallback((): void => {
-    // setNumClicks((prevNumClicks) => prevNumClicks + 1)
+  const playPause = useCallback((): void => {
     if (playerRef.current?.paused()) {
       playerRef.current?.play();
     } else {
@@ -181,9 +173,9 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     }
   }, [moveUnit]);
 
-  const setComponentValue = useCallback((action: string): void => {
-    Streamlit.setComponentValue(action)
-  }, []);
+  // const setComponentValue = useCallback((action: string): void => {
+  //   Streamlit.setComponentValue(action)
+  // }, []);
 
   const changePlaybackRate = useCallback((rate: number): void => {
     console.log("changePlaybackRate", rate)
@@ -212,39 +204,6 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     }
   };
 
-  // /** Focus handler for our "Click Me!" button. */
-  // const onFocus = useCallback((): void => {
-  //   setIsFocused(true)
-  // }, [])
-
-  // /** Blur handler for our "Click Me!" button. */
-  // const onBlur = useCallback((): void => {
-  //   setIsFocused(false)
-  // }, [])
-
-  // Show a button and some text.
-  // When the button is clicked, we'll increment our "numClicks" state
-  // variable, and send its new value back to Streamlit, where it'll
-  // be available to the Python program.
-  // return (
-  //   <span>
-  //     Hello, {video_url}! &nbsp;
-  //     <button
-  //       style={style}
-  //       onClick={onClicked}
-  //       disabled={disabled}
-  //       onFocus={onFocus}
-  //       onBlur={onBlur}
-  //     >
-  //       Click Me!
-  //     </button>
-  //   </span>
-  // )
-  // return (
-  //   <span>
-  //     Hello, {video_url}! &nbsp;
-  //   </span>
-  // )
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -255,7 +214,7 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
     <>
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <div style={containerStyle}>
-        <Button style={style} ref={playPauseButtonRef} onClick={onClicked} variant="light">▶️</Button>
+        <Button style={style} ref={playPauseButtonRef} onClick={playPause} variant="light">▶️</Button>
         <Button style={style} onMouseDown={() => startMoving("backward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchStart={() => startMoving("backward")} onTouchEnd={stopMoving} variant="light">⬅️</Button>
         <Button style={style} onMouseDown={() => startMoving("forward")} onTouchStart={() => startMoving("forward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving} variant="light">➡️</Button>
         <DropdownButton style={style} variant="light" ref={moveUnitDropdownButtonRef} title={`Unit: ${moveUnit}`} size="sm">
