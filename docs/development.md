@@ -13,13 +13,13 @@ As a high-level concept, there are three basic components of Miyoka:
 For local development:
 
 ```
-make frontend-dev
+make viewer-dev
 ```
 
 For production:
 
 ```
-make frontend
+make viewer
 ```
 
 ### Your replays are private by default
@@ -132,3 +132,15 @@ or run on docker container:
 ```
 make analyzed
 ```
+
+## How to test custom component of streamlit
+
+Start the webpack server:
+
+```
+cd miyoka/sf6/my_component/frontend
+npm install
+npm run start
+```
+
+https://docs.streamlit.io/develop/concepts/custom-components/intro
