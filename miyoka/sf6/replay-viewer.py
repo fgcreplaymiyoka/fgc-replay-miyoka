@@ -1,4 +1,5 @@
 import streamlit as st
+from miyoka.sf6.video_component import video_component
 
 st.set_page_config(layout="wide", page_title="Miyoka", page_icon="🕹️")
 
@@ -360,12 +361,7 @@ video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 # -------------------------------------------------------------------
 st.subheader("Replay", divider=True)
 
-st.markdown(
-    f"""
-<video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
-""",
-    unsafe_allow_html=True,
-)
+video_component(video_path, key="video_component")
 
 # Workaround for the column width issue
 # https://github.com/streamlit/streamlit/issues/5003#issuecomment-1276611218
