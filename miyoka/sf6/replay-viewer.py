@@ -363,13 +363,6 @@ st.subheader("Replay", divider=True)
 
 video_component(video_path, key="video_component")
 
-# st.markdown(
-#     f"""
-# <video controls="" type="video/mp4" width=100% height="auto" src="{video_path}#t=1" playsinline autoplay muted></video>
-# """,
-#     unsafe_allow_html=True,
-# )
-
 # Workaround for the column width issue
 # https://github.com/streamlit/streamlit/issues/5003#issuecomment-1276611218
 st.write(
