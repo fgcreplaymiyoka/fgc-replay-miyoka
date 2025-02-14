@@ -144,3 +144,16 @@ npm run start
 ```
 
 https://docs.streamlit.io/develop/concepts/custom-components/intro
+
+Build the frontend for release:
+
+```
+cd miyoka/sf6/video_component/frontend
+npm install
+npm run build
+```
+
+This creates an artifact in `miyoka/sf6/video_component/frontend/build`.
+
+https://docs.streamlit.io/develop/concepts/custom-components/publish
+
