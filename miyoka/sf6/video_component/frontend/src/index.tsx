@@ -1,10 +1,10 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import MyComponent from "./MyComponent"
+import VideoComponent from "./VideoComponent"
 
 ReactDOM.render(
   <React.StrictMode>
-    <MyComponent />
+    <VideoComponent />
   </React.StrictMode>,
   document.getElementById("root")
 )

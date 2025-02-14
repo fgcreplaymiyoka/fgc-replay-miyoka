@@ -1,5 +1,5 @@
 import streamlit as st
-from miyoka.sf6.my_component import my_component
+from miyoka.sf6.video_component import video_component
 
 st.set_page_config(layout="wide", page_title="Miyoka", page_icon="🕹️")
 
@@ -361,7 +361,7 @@ video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 # -------------------------------------------------------------------
 st.subheader("Replay", divider=True)
 
-my_component(video_path, key="my_component")
+video_component(video_path, key="video_component")
 
 # st.markdown(
 #     f"""

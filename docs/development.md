@@ -138,7 +138,7 @@ make analyzed
 Start the webpack server:
 
 ```
-cd miyoka/sf6/my_component/frontend
+cd miyoka/sf6/video_component/frontend
 npm install
 npm run start
 ```

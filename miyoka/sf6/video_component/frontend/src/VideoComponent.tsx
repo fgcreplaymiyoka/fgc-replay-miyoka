@@ -15,10 +15,10 @@ import Button from 'react-bootstrap/Button';
  * This is a React-based component template. The passed props are coming from the 
  * Streamlit library. Your custom args can be accessed via the `args` props.
  */
-function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
+function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement {
   const { video_url } = args
 
-  console.log("MyComponent function calling");
+  console.log("VideoComponent function calling");
   const playerRef = React.useRef<Player | null>(null);
   const playPauseButtonRef = useRef<HTMLButtonElement | null>(null);
   const playbackRateDropdownButtonRef = useRef<HTMLDivElement | null>(null);
@@ -238,4 +238,4 @@ function MyComponent({ args, disabled, theme }: ComponentProps): ReactElement {
 // passing arguments from Python -> Component.
 //
 // You don't need to edit withStreamlitConnection (but you're welcome to!).
-export default withStreamlitConnection(MyComponent)
+export default withStreamlitConnection(VideoComponent)
