@@ -9,7 +9,7 @@ $is_obs_running = Get-Process -Name $obs_process_name -ErrorAction SilentlyConti
 
 if ($is_obs_running -eq $null) {
     Write-Host "OBS Studio is not running. Starting OBS Studio..."
-    Start-Process -FilePath "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\OBS Studio\OBS Studio (64bit).lnk"
+    Start-Process "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\OBS Studio\OBS Studio (64bit).lnk" "--disable-shutdown-check"
 } else {
     Write-Host "OBS Studio is already running."
 }
