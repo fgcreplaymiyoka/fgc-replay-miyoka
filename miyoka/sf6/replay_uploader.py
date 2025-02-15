@@ -114,7 +114,8 @@ class ReplayUploader(ReplayUploaderBase):
                         )  # Previous Scene - Rolling back to the beginning of the game.
 
                     # Start recording
-                    subprocess.run(["obs-cmd-windows-amd64.exe", "recording", "start"])
+                    ret = subprocess.run(["obs-cmd-windows-amd64.exe", "recording", "start"])
+                    self.logger.info(f"obs-cmd-windows-amd64.exe recording start: ret: {ret}")
 
                     time.sleep(2)
 
@@ -135,7 +136,8 @@ class ReplayUploader(ReplayUploaderBase):
                     try:
                         recording_path = recording_path_search.group(1)
                     except Exception as ex:
-                        print("Recoding might not have started yet", ex)
+                        self.logger.error(f"Recoding might not have started yet: ret.stdout: {ret.stdout} ex: {ex}")
+                        self.is_recording = False
                         continue
 
                     self.replay_storage.upload_file_in_background(
