@@ -102,7 +102,9 @@ class ReplayUploader(ReplayUploaderBase):
             frame = self.game_window_helper.grab_frame()
 
             if self.in_replay:
-                is_replay_options_in_round_exist = self.game_window_helper.is_replay_options_in_round_exist(frame)
+                is_replay_options_in_round_exist = (
+                    self.game_window_helper.is_replay_options_in_round_exist(frame)
+                )
 
                 if is_replay_options_in_round_exist and not self.is_recording:
                     self.is_recording = True
@@ -114,8 +116,12 @@ class ReplayUploader(ReplayUploaderBase):
                         )  # Previous Scene - Rolling back to the beginning of the game.
 
                     # Start recording
-                    ret = subprocess.run(["obs-cmd-windows-amd64.exe", "recording", "start"])
-                    self.logger.info(f"obs-cmd-windows-amd64.exe recording start: ret: {ret}")
+                    ret = subprocess.run(
+                        ["obs-cmd-windows-amd64.exe", "recording", "start"]
+                    )
+                    self.logger.info(
+                        f"obs-cmd-windows-amd64.exe recording start: ret: {ret}"
+                    )
 
                     time.sleep(2)
 
@@ -136,7 +142,9 @@ class ReplayUploader(ReplayUploaderBase):
                     try:
                         recording_path = recording_path_search.group(1)
                     except Exception as ex:
-                        self.logger.error(f"Recoding might not have started yet: ret.stdout: {ret.stdout} ex: {ex}")
+                        self.logger.error(
+                            f"Recoding might not have started yet: ret.stdout: {ret.stdout} ex: {ex}"
+                        )
                         self.is_recording = False
                         continue
 

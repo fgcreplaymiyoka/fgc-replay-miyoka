@@ -46,7 +46,7 @@ class GameWindowHelper(GameWindowHelperBase):
 
         print(f"option: {option}")
         return option != ""
-    
+
     def is_replay_options_in_round_exist(self, image):
         roi = (326, 704, 635, 100)
 

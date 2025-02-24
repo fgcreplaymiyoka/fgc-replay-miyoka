@@ -34,6 +34,7 @@ class BaseStorageClient:
         self.logger = logger
 
         self.ensure_bucket()
+        self.patch_cors_configuration()
 
     def ensure_bucket(self):
         try:
@@ -63,6 +64,22 @@ class BaseStorageClient:
 
         if delete_original:
             os.remove(source_file_name)
+
+    def patch_cors_configuration(self):
+        """Set a bucket's CORS policies configuration."""
+        bucket = self.storage_client.get_bucket(self.bucket_name)
+        bucket.cors = [
+            {
+                "origin": ["*"],
+                "responseHeader": ["*"],
+                "method": ["*"],
+                "maxAgeSeconds": 3600,
+            }
+        ]
+        bucket.patch()
+
+        print(f"Set CORS policies for bucket {bucket.name} is {bucket.cors}")
+        return bucket
 
 
 class ReplayStorage(BaseStorageClient):
@@ -163,11 +180,19 @@ class ReplayStorage(BaseStorageClient):
 
     def get_authenticated_url(self, replay_id: str, round_id: int) -> str:
         bucket = self.storage_client.bucket(self.bucket_name)
-        source_blob_name = f"{replay_id}/{round_id}.mp4"
+        hls_blob_name = f"{replay_id}/hls/{round_id}/.m3u8"
+        mp4_blob_name = f"{replay_id}/{round_id}.mp4"
+
+        if bucket.blob(hls_blob_name).exists():
+            print(f"Using HLS for replay {replay_id} round {round_id}")
+            blob_name = hls_blob_name
+        else:
+            print(f"Using MP4 for replay {replay_id} round {round_id}")
+            blob_name = mp4_blob_name
 
         service_account_access_token = self.get_service_account_access_token()
 
-        url = bucket.blob(source_blob_name).generate_signed_url(
+        url = bucket.blob(blob_name).generate_signed_url(
             version="v4",
             expiration=datetime.timedelta(minutes=15),
             method="GET",
