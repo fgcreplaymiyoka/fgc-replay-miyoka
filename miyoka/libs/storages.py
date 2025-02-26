@@ -8,12 +8,17 @@ import threading
 import time
 import zipfile
 import datetime
+import argparse
 from google.cloud import storage
 from google.cloud.storage import Client
 from google.auth import impersonated_credentials
 from google.auth.credentials import TokenState
 from google.cloud.exceptions import Conflict
 import google.auth.transport.requests
+from google.cloud.video import transcoder_v1
+from google.cloud.video.transcoder_v1.services.transcoder_service import (
+    TranscoderServiceClient,
+)
 
 
 def init_storage_client(project_id: str):
@@ -180,7 +185,7 @@ class ReplayStorage(BaseStorageClient):
 
     def get_authenticated_url(self, replay_id: str, round_id: int) -> str:
         bucket = self.storage_client.bucket(self.bucket_name)
-        hls_blob_name = f"{replay_id}/hls/{round_id}/.m3u8"
+        hls_blob_name = f"{replay_id}/hls/{round_id}/manifest.m3u8"
         mp4_blob_name = f"{replay_id}/{round_id}.mp4"
 
         if bucket.blob(hls_blob_name).exists():
@@ -244,6 +249,39 @@ class ReplayStorage(BaseStorageClient):
             self.logger.info(
                 f"Removed downloaded replay {replay_id} from {download_path}"
             )
+
+    def transcode_video(
+        self,
+        project_id: str,
+        location: str,
+        input_uri: str,
+        output_uri: str,
+        preset: str,
+    ) -> transcoder_v1.types.resources.Job:
+        """Creates a job based on a job preset.
+
+        Args:
+            project_id: The GCP project ID.
+            location: The location to start the job in.
+            input_uri: Uri of the video in the Cloud Storage bucket.
+            output_uri: Uri of the video output folder in the Cloud Storage bucket.
+            preset: The preset template (for example, 'preset/web-hd').
+
+        Returns:
+            The job resource.
+        """
+
+        client = TranscoderServiceClient()
+
+        parent = f"projects/{project_id}/locations/{location}"
+        job = transcoder_v1.types.Job()
+        job.input_uri = input_uri
+        job.output_uri = output_uri
+        job.template_id = preset
+
+        response = client.create_job(parent=parent, job=job)
+        print(f"Job: {response.name}")
+        return response
 
 
 class FrameStorage(BaseStorageClient):
