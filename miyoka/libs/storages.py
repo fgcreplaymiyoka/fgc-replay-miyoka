@@ -32,21 +32,25 @@ class BaseStorageClient:
         location: str,
         storage_client: storage.Client,
         logger: Logger,
+        acl: str | None = None,
     ):
         self.bucket_name = bucket_name
         self.storage_client = storage_client
         self.location = location
         self.logger = logger
 
-        self.ensure_bucket()
+        self.ensure_bucket(acl=acl)
         self.patch_cors_configuration()
 
-    def ensure_bucket(self):
+    def ensure_bucket(self, acl: str | None = None):
         try:
             self.storage_client.create_bucket(
                 self.bucket_name,
                 project=self.storage_client.project,
                 location=self.location,
+                # https://cloud.google.com/storage/docs/access-control/lists#predefined-acl
+                predefined_acl=acl,
+                predefined_default_object_acl=acl,
             )
             self.logger.info(f"Bucket {self.bucket_name} created.")
         except Conflict as ex:
@@ -185,15 +189,7 @@ class ReplayStorage(BaseStorageClient):
 
     def get_authenticated_url(self, replay_id: str, round_id: int) -> str:
         bucket = self.storage_client.bucket(self.bucket_name)
-        hls_blob_name = f"{replay_id}/hls/{round_id}/manifest.m3u8"
-        mp4_blob_name = f"{replay_id}/{round_id}.mp4"
-
-        if bucket.blob(hls_blob_name).exists():
-            print(f"Using HLS for replay {replay_id} round {round_id}")
-            blob_name = hls_blob_name
-        else:
-            print(f"Using MP4 for replay {replay_id} round {round_id}")
-            blob_name = mp4_blob_name
+        blob_name = f"{replay_id}/{round_id}.mp4"
 
         service_account_access_token = self.get_service_account_access_token()
 
@@ -250,14 +246,33 @@ class ReplayStorage(BaseStorageClient):
                 f"Removed downloaded replay {replay_id} from {download_path}"
             )
 
+
+class ReplayStreamingStorage(BaseStorageClient):
+    def __init__(
+        self,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs, acl="publicRead")
+
+    def _playlist_path(self, replay_id: str, round_id: int) -> str:
+        return f"{replay_id}/{round_id}/manifest.m3u8"
+
+    def get_playlist_url(self, replay_id: str, round_id: int) -> str:
+        playlist_path = self._playlist_path(replay_id, round_id)
+        return f"https://storage.googleapis.com/{self.bucket_name}/{playlist_path}"
+
+    def is_playlist_exist(self, replay_id: str, round_id: int) -> bool:
+        bucket = self.storage_client.bucket(self.bucket_name)
+        playlist_path = self._playlist_path(replay_id, round_id)
+        return bucket.blob(playlist_path).exists()
+
     def transcode_video(
         self,
-        project_id: str,
-        location: str,
-        input_uri: str,
-        output_uri: str,
-        preset: str,
-    ) -> transcoder_v1.types.resources.Job:
+        input_bucket_name: str,
+        replay_id: str,
+        round_id: int,
+    ) -> transcoder_v1.Job:
         """Creates a job based on a job preset.
 
         Args:
@@ -273,11 +288,69 @@ class ReplayStorage(BaseStorageClient):
 
         client = TranscoderServiceClient()
 
-        parent = f"projects/{project_id}/locations/{location}"
-        job = transcoder_v1.types.Job()
-        job.input_uri = input_uri
-        job.output_uri = output_uri
-        job.template_id = preset
+        parent = f"projects/{self.storage_client.project}/locations/{self.location}"
+        job = transcoder_v1.Job()
+        job.input_uri = f"gs://{input_bucket_name}/{replay_id}/{round_id}.mp4"
+        job.output_uri = f"gs://{self.bucket_name}/{replay_id}/{round_id}/"
+        job.config = transcoder_v1.JobConfig(
+            elementary_streams=[
+                transcoder_v1.ElementaryStream(
+                    key="video-stream0",
+                    video_stream=transcoder_v1.VideoStream(
+                        h264=transcoder_v1.VideoStream.H264CodecSettings(
+                            height_pixels=360,
+                            width_pixels=640,
+                            bitrate_bps=550000,
+                            frame_rate=60,
+                        ),
+                    ),
+                ),
+                transcoder_v1.ElementaryStream(
+                    key="video-stream1",
+                    video_stream=transcoder_v1.VideoStream(
+                        h264=transcoder_v1.VideoStream.H264CodecSettings(
+                            height_pixels=720,
+                            width_pixels=1280,
+                            bitrate_bps=2500000,
+                            frame_rate=60,
+                        ),
+                    ),
+                ),
+                transcoder_v1.ElementaryStream(
+                    key="audio-stream0",
+                    audio_stream=transcoder_v1.AudioStream(
+                        codec="aac", bitrate_bps=64000
+                    ),
+                ),
+            ],
+            manifests=[
+                transcoder_v1.Manifest(
+                    file_name="manifest.m3u8",
+                    type=transcoder_v1.Manifest.ManifestType.HLS,
+                    mux_streams=["sd", "hd"],
+                )
+            ],
+            mux_streams=[
+                transcoder_v1.MuxStream(
+                    key="sd",
+                    container="ts",
+                    elementary_streams=["video-stream0", "audio-stream0"],
+                    file_name="sd.ts",
+                    segment_settings=transcoder_v1.SegmentSettings(
+                        segment_duration="6s", individual_segments=True
+                    ),
+                ),
+                transcoder_v1.MuxStream(
+                    key="hd",
+                    container="ts",
+                    elementary_streams=["video-stream1", "audio-stream0"],
+                    file_name="hd.ts",
+                    segment_settings=transcoder_v1.SegmentSettings(
+                        segment_duration="6s", individual_segments=True
+                    ),
+                ),
+            ],
+        )
 
         response = client.create_job(parent=parent, job=job)
         print(f"Job: {response.name}")
