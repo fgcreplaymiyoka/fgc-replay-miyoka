@@ -4,7 +4,7 @@ from miyoka.sf6.video_component import video_component
 st.set_page_config(layout="wide", page_title="Miyoka", page_icon="🕹️")
 
 import pandas as pd
-from miyoka.libs.storages import ReplayStorage
+from miyoka.libs.storages import ReplayStorage, ReplayStreamingStorage
 from miyoka.libs.bigquery import ReplayDataset
 from miyoka.libs.replay_viewer_helper import ReplayViewerHelper
 from miyoka.container import Container
@@ -29,6 +29,11 @@ def load_replay_dataset(time_range: str = None, after_time: str = None) -> pd.Da
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay storage...")
 def load_replay_storage() -> ReplayStorage:
     return Container().replay_storage()
+
+
+@st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay streaming storage...")
+def load_replay_streaming_storage() -> ReplayStreamingStorage:
+    return Container().replay_streaming_storage()
 
 
 @st.cache_resource(ttl=cache_ttl, show_spinner="Loading replay viewer...")
@@ -93,6 +98,7 @@ if debug_mode:
 
 replay_dataset: pd.DataFrame = load_replay_dataset(time_range, after_time)
 replay_storage: ReplayStorage = load_replay_storage()
+replay_streaming_storage: ReplayStreamingStorage = load_replay_streaming_storage()
 
 last_replay_row_idx = len(replay_dataset) - 1
 
@@ -352,7 +358,11 @@ next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row
 prev_match_exist = int(st.query_params.current_replay_row_idx) > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
-video_path = replay_storage.get_authenticated_url(replay_id, round_id)
+
+if replay_streaming_storage.is_playlist_exist(replay_id, round_id):
+    video_path = replay_streaming_storage.get_playlist_url(replay_id, round_id)
+else:
+    video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
 ###############################################################################################
 # View

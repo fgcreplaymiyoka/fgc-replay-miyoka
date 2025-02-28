@@ -3,6 +3,7 @@ import os
 from miyoka.libs.logger import setup_logger
 from miyoka.libs.storages import (
     ReplayStorage,
+    ReplayStreamingStorage,
     FrameStorage,
     init_storage_client,
 )
@@ -27,6 +28,10 @@ def dynamic_import(game, klass_path, *args, **kwargs):
     module = importlib.import_module(f"miyoka.{game}.{ns}")
     klass = getattr(module, klass_name)
     return klass(*args, **kwargs)
+
+
+def _replay_streaming_storage_bucket_name(bucket_name: str) -> str:
+    return f"{bucket_name}_streaming"
 
 
 config_path = os.environ.get("MIYOKA_CONFIG_PATH", "./config.yaml")
@@ -65,6 +70,18 @@ class Container(containers.DeclarativeContainer):
         download_dir=config.gcp.storages.replays.download_dir,
         skip_download=config.gcp.storages.replays.skip_download,
         sa_signed_url_generator_email=config.gcp.service_accounts.signed_url_generator.email,
+    )
+
+    replay_streaming_storage_bucket_name = providers.Callable(
+        _replay_streaming_storage_bucket_name, config.gcp.storages.replays.bucket_name
+    )
+
+    replay_streaming_storage = providers.Singleton(
+        ReplayStreamingStorage,
+        storage_client=storage_client,
+        logger=logger,
+        location=config.gcp.region,
+        bucket_name=replay_streaming_storage_bucket_name,
     )
 
     frame_storage = providers.Singleton(

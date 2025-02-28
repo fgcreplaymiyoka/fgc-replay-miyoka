@@ -83,7 +83,7 @@ All of your data is stored in your private cloud project on GCP.
 Here is the list of services need be enabled to run Miyoka:
 
 - [BigQuery](https://cloud.google.com/bigquery?hl=en) ... Database to manage your replay records.
-- [Cloud Storage](https://cloud.google.com/storage?hl=en) (a.k.a. GCS) ... Object storage to store your replay videos (mp4 format).
+- [Cloud Storage](https://cloud.google.com/storage?hl=en) (a.k.a. GCS) ... Object storage to store your replay videos (mp4/hls format).
 - [Cloud Vision](https://cloud.google.com/vision?hl=en) ... OCR for reading texts from an image.
 - [Cloud Run](https://cloud.google.com/run?hl=en) ... Serverless service to host your replay viewer.
 - [Secret Manager](https://cloud.google.com/security/products/secret-manager?hl=en) ... Managing secrets for letting replay viewer access your data on private cloud.
@@ -135,6 +135,13 @@ make analyzed
 
 ## How to test custom component of streamlit
 
+Change the release flag to `False`:
+
+```
+# miyoka/sf6/video_component/__init__.py
+_RELEASE = False
+```
+
 Start the webpack server:
 
 ```
@@ -144,6 +151,15 @@ npm run start
 ```
 
 https://docs.streamlit.io/develop/concepts/custom-components/intro
+
+## How to package custom component of streamlit
+
+Change the release flag to `True`:
+
+```
+# miyoka/sf6/video_component/__init__.py
+_RELEASE = True
+```
 
 Build the frontend for release:
 

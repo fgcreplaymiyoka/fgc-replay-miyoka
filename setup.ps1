@@ -48,6 +48,7 @@ gcloud services enable run.googleapis.com
 gcloud services enable vision.googleapis.com
 gcloud services enable secretmanager.googleapis.com
 gcloud services enable iamcredentials.googleapis.com
+gcloud services enable transcoder.googleapis.com
 
 Write-Host "Creating service accounts on GCP..."
 $gcp_replay_viewer_service_account_name = "miyoka-replay-viewer"
@@ -75,7 +76,7 @@ gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
     --member="serviceAccount:${gcp_replay_viewer_service_account}" `
     --role="roles/iam.serviceAccountTokenCreator"
 
-# This is needed for letting the SA to read the replay video (mp4).
+# This is needed for letting the SA to read the replay video (mp4/hls).
 gcloud projects add-iam-policy-binding ${google_cloud_platform_project_id} `
     --member="serviceAccount:${gcp_signed_url_service_account}" `
     --role="roles/storage.objectViewer"

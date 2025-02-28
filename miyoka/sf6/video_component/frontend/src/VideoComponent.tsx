@@ -31,7 +31,7 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
     playsinline: true,
     sources: [{
       src: video_url,
-      type: 'video/mp4'
+      type: video_url.endsWith('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
     }]
   };
 
@@ -124,10 +124,12 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
   useEffect(() => {
     setVideoJsOptions({
       ...videoJsOptions,
-      sources: [{
-        src: video_url,
-        type: 'video/mp4'
-      }]
+      sources: [
+        {
+          src: video_url,
+          type: video_url.endsWith('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
+        }
+      ]
     });
   }, [video_url]);
 

@@ -70,7 +70,12 @@ def video_component(video_url, key=None, on_change=None):
     #
     # "default" is a special argument that specifies the initial return
     # value of the component before the user has interacted with it.
-    component_value = _component_func(video_url=video_url, key=key, on_change=on_change, default=0)
+    component_value = _component_func(
+        video_url=video_url,
+        key=key,
+        on_change=on_change,
+        default=0,
+    )
 
     # We could modify the value returned from the component if we wanted.
     # There's no need to do this in our simple example - but it's an option.
