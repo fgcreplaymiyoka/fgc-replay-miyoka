@@ -358,15 +358,11 @@ next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row
 prev_match_exist = int(st.query_params.current_replay_row_idx) > 0
 next_round_exist = round_id < len(current_row["p1_round_results"])
 prev_round_exist = round_id > 1
-video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
-if not replay_streaming_storage.is_playlist_exist(replay_id, round_id):
-    res = replay_streaming_storage.transcode_video(
-        replay_storage.bucket_name, replay_id, round_id
-    )
-    print(res)
-
-video_path = replay_streaming_storage.get_playlist_url(replay_id, round_id)
+if replay_streaming_storage.is_playlist_exist(replay_id, round_id):
+    video_path = replay_streaming_storage.get_playlist_url(replay_id, round_id)
+else:
+    video_path = replay_storage.get_authenticated_url(replay_id, round_id)
 
 ###############################################################################################
 # View
