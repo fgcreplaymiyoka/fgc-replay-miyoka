@@ -176,7 +176,9 @@ class Container(containers.DeclarativeContainer):
         game_window_helper=game_window_helper,
         replay_dataset=replay_dataset,
         replay_storage=replay_storage,
+        replay_streaming_storage=replay_streaming_storage,
         cloud_run=cloud_run,
+        transcode_to_hls=config.replay_uploader.transcode_to_hls,
     )
 
     screen_customizer = providers.Factory(
