@@ -40,7 +40,6 @@ class BaseStorageClient:
         self.logger = logger
 
         self.ensure_bucket(acl=acl)
-        self.patch_cors_configuration()
 
     def ensure_bucket(self, acl: str | None = None):
         try:
@@ -189,11 +188,11 @@ class ReplayStorage(BaseStorageClient):
 
     def get_authenticated_url(self, replay_id: str, round_id: int) -> str:
         bucket = self.storage_client.bucket(self.bucket_name)
-        blob_name = f"{replay_id}/{round_id}.mp4"
+        source_blob_name = f"{replay_id}/{round_id}.mp4"
 
         service_account_access_token = self.get_service_account_access_token()
 
-        url = bucket.blob(blob_name).generate_signed_url(
+        url = bucket.blob(source_blob_name).generate_signed_url(
             version="v4",
             expiration=datetime.timedelta(minutes=15),
             method="GET",
@@ -254,6 +253,7 @@ class ReplayStreamingStorage(BaseStorageClient):
         **kwargs,
     ):
         super().__init__(*args, **kwargs, acl="publicRead")
+        self.patch_cors_configuration()
 
     def _playlist_path(self, replay_id: str, round_id: int) -> str:
         return f"{replay_id}/{round_id}/manifest.m3u8"
@@ -273,19 +273,6 @@ class ReplayStreamingStorage(BaseStorageClient):
         replay_id: str,
         round_id: int,
     ) -> transcoder_v1.Job:
-        """Creates a job based on a job preset.
-
-        Args:
-            project_id: The GCP project ID.
-            location: The location to start the job in.
-            input_uri: Uri of the video in the Cloud Storage bucket.
-            output_uri: Uri of the video output folder in the Cloud Storage bucket.
-            preset: The preset template (for example, 'preset/web-hd').
-
-        Returns:
-            The job resource.
-        """
-
         client = TranscoderServiceClient()
 
         parent = f"projects/{self.storage_client.project}/locations/{self.location}"
