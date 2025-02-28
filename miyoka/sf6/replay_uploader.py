@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from miyoka.libs.utils import cleanup_dir
 from miyoka.libs.replay_analyzer import ReplayAnalyzer
 from miyoka.libs.cloud_run import CloudRun
-from miyoka.libs.storages import ReplayStorage
+from miyoka.libs.storages import ReplayStorage, ReplayStreamingStorage
 from miyoka.libs.bigquery import ReplayDataset
 from miyoka.libs.replay_uploader import ReplayUploader as ReplayUploaderBase
 from miyoka.libs.game_window_helper import WIDTH_1280, HEIGHT_720
@@ -23,6 +23,7 @@ from miyoka.sf6.constants import (
     replay_select_character_position,
 )
 import traceback
+import threading
 
 pydirectinput.FAILSAFE = False
 
@@ -40,10 +41,12 @@ class ReplayUploader(ReplayUploaderBase):
         replay_analyzer_factory: Factory[ReplayAnalyzer],
         replay_dataset: ReplayDataset,
         replay_storage: ReplayStorage,
+        replay_streaming_storage: ReplayStreamingStorage,
         cloud_run: CloudRun,
         max_replays_per_run: Optional[int] = None,
         stop_after_duplicate_replays: Optional[int] = None,
         skip_recording: Optional[bool] = None,
+        transcode_to_hls: Optional[bool] = None,
     ):
         super().__init__()
 
@@ -55,10 +58,12 @@ class ReplayUploader(ReplayUploaderBase):
         self.replay_analyzer_factory = replay_analyzer_factory
         self.replay_dataset = replay_dataset
         self.replay_storage = replay_storage
+        self.replay_streaming_storage = replay_streaming_storage
         self.cloud_run = cloud_run
         self.max_replays_per_run = max_replays_per_run
         self.stop_after_duplicate_replays = stop_after_duplicate_replays
         self.skip_recording = skip_recording
+        self.transcode_to_hls = transcode_to_hls
 
         self.current_replay_id = None
         self.replay_rewind_count = 5
@@ -148,13 +153,15 @@ class ReplayUploader(ReplayUploaderBase):
                         self.is_recording = False
                         continue
 
-                    self.replay_storage.upload_file_in_background(
-                        recording_path,
-                        self.current_replay_id,
-                        f"{self.round}.mp4",
-                        delete_original=True,
-                        initial_delay_sec=5,  # Wait for 5 seconds before starts uploading, becuase OBS might not have finished exporting the file.
-                    )
+                    threading.Thread(
+                        target=self.upload_replay,
+                        kwargs={
+                            "recording_path": recording_path,
+                            "replay_id": self.current_replay_id,
+                            "round_id": self.round,
+                            "transcode_to_hls": self.transcode_to_hls,
+                        },
+                    ).start()
                     self.is_recording = False
                     self.round += 1
 
@@ -375,6 +382,26 @@ class ReplayUploader(ReplayUploaderBase):
         )
 
         return True
+
+    def upload_replay(
+        self,
+        recording_path: str,
+        replay_id: str,
+        round_id: int,
+        transcode_to_hls: Optional[bool] = None,
+    ):
+        self.replay_storage.upload_file(
+            recording_path,
+            replay_id,
+            f"{round_id}.mp4",
+            delete_original=True,
+            initial_delay_sec=5,  # Wait for 5 seconds before starts uploading, becuase OBS might not have finished exporting the file.
+        )
+
+        if transcode_to_hls:
+            self.replay_streaming_storage.transcode_video(
+                self.replay_storage.bucket_name, replay_id, round_id
+            )
 
     def identify_rank_from_lp(self, lp):
         if lp is None:

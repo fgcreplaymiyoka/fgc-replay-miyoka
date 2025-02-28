@@ -100,6 +100,9 @@ replay_uploader:
   skip_recording: false
   # If true, exit the game when replay upload is done.
   exit_to_desktop: true
+  # If true, requests Transcoder API to convert the mp4 video to HLS.
+  # This improves the streaming experience in replay viewer.
+  transcode_to_hls: true
 replay_analyzer:
   # Batch size of the frame splitter
   batch_size: 1000
