@@ -39,9 +39,10 @@ class BaseStorageClient:
         self.location = location
         self.logger = logger
 
-        self.ensure_bucket(acl=acl)
+        if self.ensure_bucket(acl=acl):
+            self.patch_cors_configuration()
 
-    def ensure_bucket(self, acl: str | None = None):
+    def ensure_bucket(self, acl: str | None = None) -> bool:
         try:
             self.storage_client.create_bucket(
                 self.bucket_name,
@@ -52,8 +53,11 @@ class BaseStorageClient:
                 predefined_default_object_acl=acl,
             )
             self.logger.info(f"Bucket {self.bucket_name} created.")
+            return True
         except Conflict as ex:
             self.logger.info(f"Bucket {self.bucket_name} already exists. ex: {ex}")
+
+        return False
 
     def upload_file(
         self,
@@ -253,7 +257,6 @@ class ReplayStreamingStorage(BaseStorageClient):
         **kwargs,
     ):
         super().__init__(*args, **kwargs, acl="publicRead")
-        self.patch_cors_configuration()
 
     def _playlist_path(self, replay_id: str, round_id: int) -> str:
         return f"{replay_id}/{round_id}/manifest.m3u8"
