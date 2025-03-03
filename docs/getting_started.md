@@ -25,7 +25,7 @@ Tutorial video:
 
 ### Create your project in Google Cloud Platform
 
-1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#creating_a_project).
+1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#console).
 1. [Install `gcloud` CLI](https://cloud.google.com/sdk/docs/install). Follow the instruction to login to the GCP from `gcloud`.
 
 ### Setup Miyoka
