@@ -28,11 +28,12 @@ original_language: $original_language
 
 $google_cloud_platform_project_id = Read-Host "Enter your [GCP project ID](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md)"
 $google_cloud_platform_region = Read-Host "Enter your [GCP region](https://cloud.google.com/compute/docs/regions-zones). Example: asia-northeast1"
+$randomString = -join ((65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object {[char]$_})
 
 (Get-Content ./config.yaml).Replace('<google_cloud_platform.project_id>', "$google_cloud_platform_project_id") | Set-Content ./config.yaml
 (Get-Content ./config.yaml).Replace('<google_cloud_platform.region>', "$google_cloud_platform_region") | Set-Content ./config.yaml
-(Get-Content ./config.yaml).Replace('<gcp.storages.replays.bucket_name>', "$($Env:UserName.ToLower())-miyoka_replays") | Set-Content ./config.yaml
-(Get-Content ./config.yaml).Replace('<gcp.storages.frames.bucket_name>', "$($Env:UserName.ToLower())-miyoka_frames") | Set-Content ./config.yaml
+(Get-Content ./config.yaml).Replace('<gcp.storages.replays.bucket_name>', "miyoka_replays_$($randomString.ToLower())") | Set-Content ./config.yaml
+(Get-Content ./config.yaml).Replace('<gcp.storages.frames.bucket_name>', "miyoka_frames_$($randomString.ToLower())") | Set-Content ./config.yaml
 
 Write-Host "Authenticating for using the gcloud CLI..."
 gcloud auth application-default login

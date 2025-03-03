@@ -166,7 +166,7 @@ class Container(containers.DeclarativeContainer):
         game=config.game.name,
         klass_path="replay_uploader.ReplayUploader",
         logger=logger,
-        replay_search_user_code=config.replay_uploader.user_code,
+        replay_search_players=config.game.players,
         replay_search_replay_id=config.replay_uploader.replay_id,
         analyzer_operation_mode=config.replay_uploader.analyzer_operation_mode,
         max_replays_per_run=config.replay_uploader.max_replays_per_run,

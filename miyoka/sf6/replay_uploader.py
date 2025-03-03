@@ -35,7 +35,7 @@ class ReplayUploader(ReplayUploaderBase):
         self,
         logger: Logger,
         game_window_helper: GameWindowHelper,
-        replay_search_user_code: str,
+        replay_search_players: list[dict[str, str]],
         replay_search_replay_id: str,
         analyzer_operation_mode: bool,
         replay_analyzer_factory: Factory[ReplayAnalyzer],
@@ -52,7 +52,7 @@ class ReplayUploader(ReplayUploaderBase):
 
         self.logger = logger
         self.game_window_helper = game_window_helper
-        self.replay_search_user_code = str(replay_search_user_code)
+        self.replay_search_players = replay_search_players
         self.replay_search_replay_id = replay_search_replay_id
         self.analyzer_operation_mode = analyzer_operation_mode
         self.replay_analyzer_factory = replay_analyzer_factory
@@ -95,7 +95,10 @@ class ReplayUploader(ReplayUploaderBase):
 
     def run(self):
         try:
-            self._run()
+            for replay_search_player in self.replay_search_players:
+                self.replay_search_user_code = str(replay_search_player["id"])
+                self._run()
+                self._exit_from_replay()
         except Exception as e:
             self.logger.error(f"Error: {e} traceback: {traceback.format_exc()}")
             raise e
@@ -128,7 +131,7 @@ class ReplayUploader(ReplayUploaderBase):
                         f"obs-cmd-windows-amd64.exe recording start: ret: {ret}"
                     )
 
-                    time.sleep(2)
+                    time.sleep(0.3)
 
                     pydirectinput.press("r")  # Resume
 
@@ -402,6 +405,14 @@ class ReplayUploader(ReplayUploaderBase):
             self.replay_streaming_storage.transcode_video(
                 self.replay_storage.bucket_name, replay_id, round_id
             )
+
+    def _exit_from_replay(self):
+        # Back to the top screen
+        pydirectinput.press("ESC")
+        pydirectinput.press("ESC")
+        pydirectinput.press("ESC")
+        self.recorded_replay_count = 0
+        self.duplicate_replay_count = 0
 
     def identify_rank_from_lp(self, lp):
         if lp is None:
