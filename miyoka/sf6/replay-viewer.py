@@ -85,12 +85,14 @@ def highlight_cols(s):
 
 replay_viewer_helper: ReplayViewerHelper = load_replay_viewer_helper()
 
-player_name = replay_viewer_helper.player_name
+players = replay_viewer_helper.players
 time_range = replay_viewer_helper.time_range
 after_time = replay_viewer_helper.after_time
 should_redact_pii = replay_viewer_helper.should_redact_pii
 min_mr_in_chart = replay_viewer_helper.min_mr_in_chart
 max_mr_in_chart = replay_viewer_helper.max_mr_in_chart
+
+player_names = [player["name"] for player in players]
 
 debug_mode = replay_viewer_helper.debug_mode
 if debug_mode:
@@ -107,12 +109,14 @@ if "round_id" not in st.query_params:
 
 result_list = ("all", "wins", "loses")
 
+if "player" not in st.query_params:
+    st.query_params.player = player_names[0]
 
 if "result_filter" not in st.query_params:
     st.query_params.result_filter = "all"
 
-if "my_character_filter" not in st.query_params:
-    st.query_params.my_character_filter = "all"
+if "character_filter" not in st.query_params:
+    st.query_params.character_filter = "all"
 
 if "opponent_character_filter" not in st.query_params:
     st.query_params.opponent_character_filter = "all"
@@ -157,6 +161,12 @@ def interval_changed():
     st.query_params.interval = st.session_state.interval
 
 
+def player_changed():
+    st.query_params.player = st.session_state.player
+    reset_current_replay_row_idx()
+    reset_round()
+
+
 def play_date_range_changed():
     st.query_params.play_date_range = st.session_state.play_date_range
     reset_current_replay_row_idx()
@@ -169,8 +179,8 @@ def result_filter_changed():
     reset_round()
 
 
-def my_character_filter_changed():
-    st.query_params.my_character_filter = st.session_state.my_character_filter
+def character_filter_changed():
+    st.query_params.character_filter = st.session_state.character_filter
     reset_current_replay_row_idx()
     reset_round()
 
@@ -215,6 +225,24 @@ with st.sidebar:
     st.subheader("Filters")
 
     ###############
+    # Player: (Select box)
+    ###############
+    player_index = player_names.index(st.query_params.player)
+    st.selectbox(
+        "Player:",
+        player_names,
+        on_change=player_changed,
+        index=player_index,
+        key="player",
+    )
+    player_name = players[player_index]["pattern"]
+
+    replay_dataset = replay_viewer_helper.filter_replay_dataset_by_player(
+        replay_dataset, player_name
+    )
+    last_replay_row_idx = len(replay_dataset) - 1
+
+    ###############
     # Played after: (Select box)
     ###############
     play_date_range = st.selectbox(
@@ -251,23 +279,23 @@ with st.sidebar:
     ###############
     # My character: (Select box)
     ###############
-    my_character_list = (
+    character_list = (
         replay_viewer_helper.get_player_dataset(replay_dataset, player_name)[
             "character"
         ]
         .sort_values()
         .unique()
     )
-    my_character_list = ("all", *my_character_list)
-    my_character_filter = st.selectbox(
-        "My character",
-        my_character_list,
-        index=my_character_list.index(st.query_params.my_character_filter),
-        key="my_character_filter",
-        on_change=my_character_filter_changed,
+    character_list = ("all", *character_list)
+    character_filter = st.selectbox(
+        "Character",
+        character_list,
+        index=character_list.index(st.query_params.character_filter),
+        key="character_filter",
+        on_change=character_filter_changed,
     )
     replay_dataset = replay_viewer_helper.filter_replay_dataset_by_my_character(
-        my_character_filter, replay_dataset, player_name
+        character_filter, replay_dataset, player_name
     )
     last_replay_row_idx = len(replay_dataset) - 1
 
@@ -283,7 +311,7 @@ with st.sidebar:
     )
     opponent_character_list = ("all", *opponent_character_list)
     opponent_character_filter = st.selectbox(
-        "Opponent character",
+        "Vs. character",
         opponent_character_list,
         index=opponent_character_list.index(st.query_params.opponent_character_filter),
         key="opponent_character_filter",
@@ -340,7 +368,7 @@ if len(player_dataset) != len(replay_dataset):
     st.error(
         f"""
         Length of Replay dataset and Player dataset don't match.
-        Please check that the `replay_viewer.player_name` in config.yaml is set correctly.
+        Please check that the `game.players[].pattern` in config.yaml is set correctly.
         replay_dataset: {len(replay_dataset)}
         player_dataset: {len(player_dataset)}
         """
