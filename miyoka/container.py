@@ -195,7 +195,7 @@ class Container(containers.DeclarativeContainer):
         logger=logger,
         password=config.replay_viewer.password,
         debug_mode=config.replay_viewer.debug_mode,
-        player_name=config.replay_viewer.player_name,
+        players=config.game.players,
         time_range=config.replay_viewer.time_range,
         after_time=config.replay_viewer.after_time,
         min_mr_in_chart=config.replay_viewer.min_mr_in_chart,

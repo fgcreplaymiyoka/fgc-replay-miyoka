@@ -46,12 +46,15 @@ In addition to the initial deployment, you should re-deploy when you changed `re
 If you have changed your player name in the game, you might encounter the following error:
 
 ```plaintext
-Length of Replay dataset and Player dataset don't match. Please check that the replay_viewer.player_name in config.yaml is set correctly.
+Length of Replay dataset and Player dataset don't match. Please check that the game.players[].pattern in config.yaml is set correctly.
 ```
 
-To resolve this error, register both your new name and old name to the `replay_viewer.player_name` in config.yaml. For example:
+To resolve this error, register both your new name and old name to the `game.players[].pattern` in config.yaml. For example:
 
 ```yaml
-replay_viewer:
-    player_name: MyNewNmae|MyOldNmae
+game:
+  players:
+    - name: My Player name
+      id: xxxxxxxx
+      pattern: MyNewNmae|MyOldNmae
 ```

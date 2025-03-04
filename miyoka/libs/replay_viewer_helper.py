@@ -16,7 +16,7 @@ class ReplayViewerHelper:
         self,
         logger: Logger,
         password: str,
-        player_name: str,
+        players: list[dict[str, str]],
         time_range: str,
         after_time: str,
         min_mr_in_chart: int | None,
@@ -28,7 +28,7 @@ class ReplayViewerHelper:
     ):
         self.logger = logger
         self.password = password
-        self.player_name = player_name
+        self.players = players
         self.time_range = time_range
         self.after_time = after_time
         self.default_played_after_filter = default_played_after_filter
@@ -236,6 +236,20 @@ class ReplayViewerHelper:
                     player_name, case=False, na=False
                 )
                 & (replay_dataset["p2_result"] == result_filter)
+            )
+        ]
+
+    def filter_replay_dataset_by_player(self, replay_dataset, player_name):
+        return replay_dataset[
+            (
+                replay_dataset["p1_player_name"].str.contains(
+                    player_name, case=False, na=False
+                )
+            )
+            | (
+                replay_dataset["p2_player_name"].str.contains(
+                    player_name, case=False, na=False
+                )
             )
         ]
 
