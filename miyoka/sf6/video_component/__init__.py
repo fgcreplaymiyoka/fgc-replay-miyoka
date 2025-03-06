@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 # the component, and True when we're ready to package and distribute it.
 # (This is, of course, optional - there are innumerable ways to manage your
 # release process.)
-_RELEASE = True
+_RELEASE = False
 
 # Declare a Streamlit component. `declare_component` returns a function
 # that is used to create instances of the component. We're naming this
@@ -43,7 +43,7 @@ else:
 # `declare_component` and call it done. The wrapper allows us to customize
 # our component's API: we can pre-process its input args, post-process its
 # output value, and add a docstring for users.
-def video_component(video_url, key=None, on_change=None):
+def video_component(video_url, metadata, key=None, on_change=None):
     """Create a new instance of "video_component".
 
     Parameters
@@ -72,6 +72,7 @@ def video_component(video_url, key=None, on_change=None):
     # value of the component before the user has interacted with it.
     component_value = _component_func(
         video_url=video_url,
+        metadata=metadata,
         key=key,
         on_change=on_change,
         default=0,
