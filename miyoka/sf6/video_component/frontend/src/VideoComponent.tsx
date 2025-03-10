@@ -10,15 +10,18 @@ import Player from 'video.js/dist/types/player';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
 
 /**
  * This is a React-based component template. The passed props are coming from the 
  * Streamlit library. Your custom args can be accessed via the `args` props.
  */
 function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement {
-  const { video_url } = args
+  const { video_url, metadata } = args
 
-  console.log("VideoComponent function calling");
+  console.log("VideoComponent function calling: ", video_url, metadata);
   const playerRef = React.useRef<Player | null>(null);
   const playPauseButtonRef = useRef<HTMLButtonElement | null>(null);
   const playbackRateDropdownButtonRef = useRef<HTMLDivElement | null>(null);
@@ -212,8 +215,35 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
     gap: '1px', // Adjust the gap between elements as needed
   };
 
+  const replayInfoStyle: React.CSSProperties = {
+    fontSize: '50%',
+  };
+
+  const replayInfoStyleSmall: React.CSSProperties = {
+    fontSize: '80%',
+  };
+
   return (
     <>
+      <Container style={replayInfoStyle} fluid="sm">
+        <Row>
+          <Col>
+            <Row>{metadata["player_1"]["player_name"]} | {metadata["player_1"]["character"].toUpperCase()} ({metadata["player_1"]["mode"]}) </Row>
+            <Row>{metadata["player_1"]["result"].toUpperCase()} ({metadata["player_1"]["rounds"]})</Row>
+            <Row>{metadata["player_1"]["rank"].toUpperCase()} ({metadata["player_1"]["point"]})</Row>
+          </Col>
+          <Col>
+          <Row><div className="text-center">Round: {metadata["round"]} / {metadata["total_round_count"]}</div></Row>
+            <Row style={replayInfoStyleSmall}><div className="text-center">Replay ID: {metadata["replay_id"]}</div></Row>
+            <Row style={replayInfoStyleSmall}><div className="text-center">Play date: {metadata["played_at"]}</div></Row>
+          </Col>
+          <Col >
+            <Row><div className="text-right">{metadata["player_2"]["player_name"]} | {metadata["player_2"]["character"].toUpperCase()} ({metadata["player_2"]["mode"]})</div></Row>
+            <Row><div className="text-right">{metadata["player_2"]["result"].toUpperCase()} ({metadata["player_2"]["rounds"]})</div></Row>
+            <Row><div className="text-right">{metadata["player_2"]["rank"].toUpperCase()} ({metadata["player_2"]["point"]})</div></Row>
+          </Col>
+        </Row>
+      </Container>
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <div style={containerStyle}>
         <Button style={style} ref={playPauseButtonRef} onClick={playPause} variant="light">▶️</Button>

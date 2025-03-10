@@ -72,7 +72,8 @@ def clear_query_params():
 
 
 def reset_current_replay_row_idx():
-    del st.query_params["current_replay_row_idx"]
+    if "current_replay_row_idx" in st.query_params:
+        del st.query_params["current_replay_row_idx"]
 
 
 def highlight_cols(s):
@@ -382,9 +383,11 @@ current_row_player_side = player_dataset.iloc[
 
 replay_id = current_row["replay_id"]
 round_id = int(st.query_params.round_id)
+total_round_count = len(current_row["p1_round_results"])
+played_at = current_row["played_at"]
 next_match_exist = int(st.query_params.current_replay_row_idx) < last_replay_row_idx
 prev_match_exist = int(st.query_params.current_replay_row_idx) > 0
-next_round_exist = round_id < len(current_row["p1_round_results"])
+next_round_exist = round_id < total_round_count
 prev_round_exist = round_id > 1
 
 if replay_streaming_storage.is_playlist_exist(replay_id, round_id):
@@ -399,7 +402,33 @@ else:
 # -------------------------------------------------------------------
 st.subheader("Replay", divider=True)
 
-video_component(video_path, key="video_component")
+metadata = {}
+metadata["replay_id"] = replay_id
+metadata["round"] = round_id
+metadata["total_round_count"] = total_round_count
+metadata["played_at"] = str(played_at)
+metadata["player_1"] = {
+    "player_name": "*****",
+    "character": current_row["p1_character"],
+    "mode": current_row["p1_mode"],
+    "result": current_row["p1_result"],
+    "rounds": ",".join(current_row["p1_round_results"]),
+    "point": str(current_row["p1_mr"]) or str(current_row["p1_lp"]),
+    "rank": current_row["p1_rank"],
+}
+metadata["player_2"] = {
+    "player_name": "*****",
+    "character": current_row["p2_character"],
+    "mode": current_row["p2_mode"],
+    "result": current_row["p2_result"],
+    "rounds": ",".join(current_row["p2_round_results"]),
+    "point": str(current_row["p2_mr"]) or str(current_row["p2_lp"]),
+    "rank": current_row["p2_rank"],
+}
+
+metadata[f"player_{current_row_player_side}"]["player_name"] = player_name
+
+video_component(video_path, metadata, key="video_component")
 
 # Workaround for the column width issue
 # https://github.com/streamlit/streamlit/issues/5003#issuecomment-1276611218
@@ -423,64 +452,6 @@ col_1.button("Prev match", on_click=prev_match, disabled=not prev_match_exist)
 col_2.button("Prev round", on_click=prev_round, disabled=not prev_round_exist)
 col_3.button("Next round", on_click=next_round, disabled=not next_round_exist)
 col_4.button("Next match", on_click=next_match, disabled=not next_match_exist)
-
-metadata = {"info": [], "player 1": [], "player 2": []}
-
-if not should_redact_pii:
-    metadata["info"].append("name")
-    metadata["player 1"].append(current_row["p1_player_name"])
-    metadata["player 2"].append(current_row["p2_player_name"])
-
-metadata["info"].extend(["character", "mode", "result", "rounds", "lp", "mr", "rank"])
-metadata["player 1"].extend(
-    [
-        current_row["p1_character"],
-        current_row["p1_mode"],
-        current_row["p1_result"],
-        ",".join(current_row["p1_round_results"]),
-        str(current_row["p1_lp"]),
-        str(current_row["p1_mr"]),
-        current_row["p1_rank"],
-    ]
-)
-metadata["player 2"].extend(
-    [
-        current_row["p2_character"],
-        current_row["p2_mode"],
-        current_row["p2_result"],
-        ",".join(current_row["p2_round_results"]),
-        str(current_row["p2_lp"]),
-        str(current_row["p2_mr"]),
-        current_row["p2_rank"],
-    ]
-)
-
-metadata_df = pd.DataFrame(data=metadata)
-metadata_df = metadata_df.reset_index(drop=True).set_index(metadata_df.columns[0])
-
-metadata_df = metadata_df.style.map(
-    highlight_cols, subset=pd.IndexSlice[:, [f"player {current_row_player_side}"]]
-)
-st.table(metadata_df)
-
-col_1, col_2, col_3, col_4 = st.columns(4)
-
-col_1.markdown(
-    f"<p class='big-font'>Replay ID: {current_row['replay_id']}</p>",
-    unsafe_allow_html=True,
-)
-
-col_2.markdown(
-    f"<p class='big-font'>Date: {current_row['played_at']}</p>", unsafe_allow_html=True
-)
-col_3.markdown(
-    f"<p class='big-font'>Round: {st.query_params.round_id}</p>",
-    unsafe_allow_html=True,
-)
-col_4.markdown(
-    f"<p class='big-font'><a href='{video_path}' download='replay.mp4'>Download replay</a></p>",
-    unsafe_allow_html=True,
-)
 
 st.slider(
     "Match",
