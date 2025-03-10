@@ -219,6 +219,10 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
     fontSize: '50%',
   };
 
+  const replayInfoStyleSmall: React.CSSProperties = {
+    fontSize: '80%',
+  };
+
   return (
     <>
       <Container style={replayInfoStyle} fluid="sm">
@@ -229,14 +233,14 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
             <Row>{metadata["player_1"]["rank"].toUpperCase()} ({metadata["player_1"]["point"]})</Row>
           </Col>
           <Col>
-            <Row>Replay ID: {metadata["replay_id"]}</Row>
-            <Row>Round: {metadata["round"]} / {metadata["total_round_count"]}</Row>
-            <Row>Play date: {metadata["played_at"]}</Row>
+          <Row><div className="text-center">Round: {metadata["round"]} / {metadata["total_round_count"]}</div></Row>
+            <Row style={replayInfoStyleSmall}><div className="text-center">Replay ID: {metadata["replay_id"]}</div></Row>
+            <Row style={replayInfoStyleSmall}><div className="text-center">Play date: {metadata["played_at"]}</div></Row>
           </Col>
           <Col >
-            <Row>{metadata["player_2"]["player_name"]} | {metadata["player_2"]["character"].toUpperCase()} ({metadata["player_2"]["mode"]})</Row>
-            <Row>{metadata["player_2"]["result"].toUpperCase()} ({metadata["player_2"]["rounds"]})</Row>
-            <Row>{metadata["player_2"]["rank"].toUpperCase()} ({metadata["player_2"]["point"]})</Row>
+            <Row><div className="text-right">{metadata["player_2"]["player_name"]} | {metadata["player_2"]["character"].toUpperCase()} ({metadata["player_2"]["mode"]})</div></Row>
+            <Row><div className="text-right">{metadata["player_2"]["result"].toUpperCase()} ({metadata["player_2"]["rounds"]})</div></Row>
+            <Row><div className="text-right">{metadata["player_2"]["rank"].toUpperCase()} ({metadata["player_2"]["point"]})</div></Row>
           </Col>
         </Row>
       </Container>
