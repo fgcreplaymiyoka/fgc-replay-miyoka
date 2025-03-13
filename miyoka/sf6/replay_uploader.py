@@ -5,6 +5,7 @@ import time
 import pydirectinput
 import subprocess
 import re
+import copy
 from typing import Optional
 from dependency_injector.providers import Factory
 from datetime import datetime, timezone
@@ -66,6 +67,7 @@ class ReplayUploader(ReplayUploaderBase):
         self.transcode_to_hls = transcode_to_hls
 
         self.current_replay_id = None
+        self.current_metadata = None
         self.replay_rewind_count = 5
         self.in_replay = False
         self.is_recording = False
@@ -256,6 +258,14 @@ class ReplayUploader(ReplayUploaderBase):
                     g_repeat_mode = False
                     self.replay_done = True
 
+                    threading.Thread(
+                        target=self.insert_replay_dataset,
+                        kwargs={
+                            "replay_id": self.current_replay_id,
+                            "metadata": copy.deepcopy(self.current_metadata),
+                        },
+                    ).start()
+
                     if self.analyzer_operation_mode == "schedule":
                         # Analyze asynchronously so the uploading iteration is not blocked.
                         self.cloud_run.schedule_analyze_in_background(
@@ -327,19 +337,22 @@ class ReplayUploader(ReplayUploaderBase):
         p2_rank = self.game_window_helper.identify_rank(frame, player="p2")
         p1_mr, p2_mr = None, None
         p1_lp, p2_lp = None, None
-        if p1_rank == "master" or p1_rank == "legend":
+        if p1_rank == "legend":
             p1_mr = self.game_window_helper.identify_mr(frame, player="p1")
+        elif p1_rank == "master":
+            p1_mr = self.game_window_helper.identify_mr(frame, player="p1")
+            p1_rank = self.identify_rank_from_mr(p1_mr)
         else:
             p1_lp = self.game_window_helper.identify_lp(frame, player="p1")
+            p1_rank = self.identify_rank_from_lp(p1_lp)
 
-        if p2_rank == "master" or p2_rank == "legend":
+        if p2_rank == "legend":
             p2_mr = self.game_window_helper.identify_mr(frame, player="p2")
+        elif p2_rank == "master":
+            p2_mr = self.game_window_helper.identify_mr(frame, player="p2")
+            p2_rank = self.identify_rank_from_mr(p2_mr)
         else:
             p2_lp = self.game_window_helper.identify_lp(frame, player="p2")
-
-        if not p1_rank:
-            p1_rank = self.identify_rank_from_lp(p1_lp)
-        if not p2_rank:
             p2_rank = self.identify_rank_from_lp(p2_lp)
 
         p1_character = self.game_window_helper.identify_character(frame, player="p1")
@@ -378,14 +391,20 @@ class ReplayUploader(ReplayUploaderBase):
             "%Y-%m-%d %H:%M:%S"
         )
         current_metadata["played_at"] = played_at.strftime("%Y-%m-%d %H:%M:%S")
-
-        self.replay_dataset.insert(
-            current_replay_id,
-            metadata=current_metadata,
-        )
+        self.current_metadata = current_metadata
 
         return True
 
+    def insert_replay_dataset(
+        self,
+        replay_id: str,
+        metadata: dict,
+    ):
+        self.replay_dataset.insert(
+            replay_id,
+            metadata=metadata,
+        )
+        
     def upload_replay(
         self,
         recording_path: str,
@@ -413,6 +432,19 @@ class ReplayUploader(ReplayUploaderBase):
         pydirectinput.press("ESC")
         self.recorded_replay_count = 0
         self.duplicate_replay_count = 0
+
+    def identify_rank_from_mr(self, mr):
+        if mr is None:
+            return "master"
+
+        if mr >= 1800:
+            return "ultimatemaster"
+        elif mr >= 1700:
+            return "grandmaster"
+        elif mr >= 1600:
+            return "highmaster"
+        else:
+            return "master"
 
     def identify_rank_from_lp(self, lp):
         if lp is None:
