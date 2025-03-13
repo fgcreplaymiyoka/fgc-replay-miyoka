@@ -25,7 +25,6 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
   const playerRef = React.useRef<Player | null>(null);
   const playPauseButtonRef = useRef<HTMLButtonElement | null>(null);
   const playbackRateDropdownButtonRef = useRef<HTMLDivElement | null>(null);
-  const moveUnitDropdownButtonRef = useRef<HTMLDivElement | null>(null);
   const initialVideoJsOptions = {
     autoplay: 'muted',
     controls: true,
@@ -40,7 +39,6 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
 
   const [videoJsOptions, setVideoJsOptions] = useState(initialVideoJsOptions);
   const [playbackRate, setPlaybackRate] = useState(1)
-  const [moveUnit, setMoveUnit] = useState('second')
   // https://dirask-react.medium.com/react-mouse-button-press-and-hold-example-9f749300f71a
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -155,7 +153,7 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
     }
   }, [])
 
-  const movePosition = useCallback((direction: string): void => {
+  const movePosition = useCallback((direction: string, moveUnit: string): void => {
     const player = playerRef.current;
     if (player) {
       var currentTime = player?.currentTime() ?? 0
@@ -176,7 +174,7 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
         player.currentTime(currentTime - moveValue);
       }
     }
-  }, [moveUnit]);
+  }, []);
 
   // const setComponentValue = useCallback((action: string): void => {
   //   Streamlit.setComponentValue(action)
@@ -189,18 +187,6 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
       player.playbackRate(rate);
     }
   }, []);
-
-  const changeMoveUnit = useCallback((unit: string): void => {
-    console.log("changeMoveUnit", unit)
-    setMoveUnit(unit);
-  }, []);
-
-  const startMoving = (direction: string) => {
-    if (intervalRef.current) return;
-    intervalRef.current = setInterval(() => {
-      movePosition(direction);
-    }, 100); // Adjust the interval time as needed
-  };
 
   const stopMoving = () => {
     if (intervalRef.current) {
@@ -247,12 +233,10 @@ function VideoComponent({ args, disabled, theme }: ComponentProps): ReactElement
       <VideoJS options={videoJsOptions} onReady={handlePlayerReady} onUpdate={handlePlayerUpdate} />
       <div style={containerStyle}>
         <Button style={style} ref={playPauseButtonRef} onClick={playPause} variant="light">▶️</Button>
-        <Button style={style} onMouseDown={() => startMoving("backward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchStart={() => startMoving("backward")} onTouchEnd={stopMoving} variant="light">⬅️</Button>
-        <Button style={style} onMouseDown={() => startMoving("forward")} onTouchStart={() => startMoving("forward")} onMouseUp={stopMoving} onMouseLeave={stopMoving} onTouchEnd={stopMoving} variant="light">➡️</Button>
-        <DropdownButton style={style} variant="light" ref={moveUnitDropdownButtonRef} title={`Unit: ${moveUnit}`} size="sm">
-          <Dropdown.Item onClick={() => changeMoveUnit('frame')}>frame</Dropdown.Item>
-          <Dropdown.Item onClick={() => changeMoveUnit('second')}>second</Dropdown.Item>
-        </DropdownButton>
+        <Button style={style} onClick={() => movePosition('backward', 'frame')} variant="light">-1f</Button>
+        <Button style={style} onClick={() => movePosition('forward', 'frame')} variant="light">+1f</Button>
+        <Button style={style} onClick={() => movePosition('backward', 'second')} variant="light">-1s</Button>
+        <Button style={style} onClick={() => movePosition('forward', 'second')} variant="light">+1s</Button>
         <DropdownButton style={style} variant="light" ref={playbackRateDropdownButtonRef} title={`Speed: ${playbackRate}x`} size="sm">
           <Dropdown.Item onClick={() => changePlaybackRate(0.25)}>0.25X</Dropdown.Item>
           <Dropdown.Item onClick={() => changePlaybackRate(0.5)}>0.5X</Dropdown.Item>
