@@ -373,7 +373,7 @@ class GameWindowHelper(GameWindowHelperBase):
 
         if not character:
             self.logger.error(f"failed to identify character for {player}")
-            raise ValueError()
+            return "unknown"
 
         return character
 

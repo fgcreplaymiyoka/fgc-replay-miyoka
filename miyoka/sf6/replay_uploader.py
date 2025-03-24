@@ -133,7 +133,7 @@ class ReplayUploader(ReplayUploaderBase):
                         f"obs-cmd-windows-amd64.exe recording start: ret: {ret}"
                     )
 
-                    time.sleep(0.3)
+                    time.sleep(1.0)
 
                     pydirectinput.press("r")  # Resume
 
