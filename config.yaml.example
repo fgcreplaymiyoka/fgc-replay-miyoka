@@ -8,6 +8,13 @@ game:
   name: <game.name>
   window:
     name: <game.window.name>
+  players:
+    # `name`: Name of the player displayed in replay viewer.
+    # `id`: Identifier of the player in the game. Replay Uploader crawls replays associated with the ID in the game.
+    # `pattern`: Pattern of the player name in the game. This is used to filter the replay dataset for each player.
+    - name: Player-A
+      id: Player-A-user-code
+      pattern: Player-A-pattern
   extra:
     <game.extra>
 # Google Cloud Platform (GCP)
@@ -86,8 +93,6 @@ gcp:
       # When `analyzer_operation_mode=schedule`, you create an analyze job on Cloud Run.
       name:
 replay_uploader:
-  # Your user code of the game. Replay Uploader crawls your replays in the game UI with this ID.
-  user_code: <required>
   # "schedule" ... Schedule analyze job in Cloud Run. You must deploy analyzer in Cloud Run Job beforehand.
   # "inline" ... Execute analyzer in the replay uploader.
   # "skip" ... Skip analyzer execution.
@@ -125,7 +130,7 @@ replay_analyzer:
   upload_split_frames: false
   # If true, upload the last processed images. Useful for debugging.
   upload_last_images: true
-  # (Optional) Replay ID to be analyzed. This is required when `analyzer_operation_mode=schedule`.
+  # (Optional) Replay ID to be analyzed when `analyzer_operation_mode=schedule`.
   replay_id: ${REPLAY_ANALYZER_REPLAY_ID}
 replay_viewer:
   # Password to access to the Replay viewer.
@@ -134,8 +139,6 @@ replay_viewer:
   password: miyoka
   # If true, additional information is visibile on the viewer for debugging purpose.
   debug_mode: false
-  # Player name of your game account.
-  player_name: <required>
   # Replay dataset after the specified time ago is displayed. e.g. 30 days
   time_range:
   # Replay dataset after the specific date time is displayed. e.g. 2024-01-01 00:00:00
