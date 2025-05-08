@@ -26,7 +26,7 @@ Tutorial video:
 ### Create your project in Google Cloud Platform
 
 NOTE:
-If you want to [save replays in your computer instead of cloud storage](./getting_started/sf6.md#save-replays-in-local-file-storage), skip this step.
+If you want to [save replays in your computer instead of cloud storage](./getting_started/sf6.md#save-replays-in-your-computer), skip this step.
 
 1. [Create a new GCP project](https://cloud.google.com/resource-manager/docs/creating-managing-projects#console).
 1. [Install `gcloud` CLI](https://cloud.google.com/sdk/docs/install). Follow the instruction to login to the GCP from `gcloud`.
