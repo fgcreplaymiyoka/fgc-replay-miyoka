@@ -19,6 +19,7 @@ from miyoka.libs.cloud_run import CloudRun
 from miyoka.libs.scene_exporter import SceneExporter
 from miyoka.libs.scene_store import SceneStore
 from miyoka.libs.replay_viewer_helper import ReplayViewerHelper
+from unittest.mock import Mock
 import importlib
 
 
@@ -161,24 +162,44 @@ class Container(containers.DeclarativeContainer):
         round_analyzer_factory=round_analyzer.provider,
     )
 
-    replay_uploader = providers.Factory(
+    replay_dataset_selector = providers.Selector(
+        config.replay_recorder.save_to,
+        google_cloud_storage=replay_dataset,
+        local_file_storage=providers.Factory(Mock),
+    )
+
+    replay_storage_selector = providers.Selector(
+        config.replay_recorder.save_to,
+        google_cloud_storage=replay_storage,
+        local_file_storage=providers.Factory(Mock),
+    )
+
+    replay_streaming_storage_selector = providers.Selector(
+        config.replay_recorder.save_to,
+        google_cloud_storage=replay_streaming_storage,
+        local_file_storage=providers.Factory(Mock),
+    )
+
+    replay_recorder = providers.Factory(
         dynamic_import,
         game=config.game.name,
-        klass_path="replay_uploader.ReplayUploader",
+        klass_path="replay_recorder.ReplayRecorder",
         logger=logger,
         replay_search_players=config.game.players,
-        replay_search_replay_id=config.replay_uploader.replay_id,
-        analyzer_operation_mode=config.replay_uploader.analyzer_operation_mode,
-        max_replays_per_run=config.replay_uploader.max_replays_per_run,
-        stop_after_duplicate_replays=config.replay_uploader.stop_after_duplicate_replays,
-        skip_recording=config.replay_uploader.skip_recording,
+        replay_search_replay_ids=config.game.replay_ids,
+        analyzer_operation_mode=config.replay_recorder.analyzer_operation_mode,
+        max_replays_per_run=config.replay_recorder.max_replays_per_run,
+        stop_after_duplicate_replays=config.replay_recorder.stop_after_duplicate_replays,
+        skip_recording=config.replay_recorder.skip_recording,
+        save_to=config.replay_recorder.save_to,
+        separate_round=config.replay_recorder.separate_round,
         replay_analyzer_factory=replay_analyzer.provider,
         game_window_helper=game_window_helper,
-        replay_dataset=replay_dataset,
-        replay_storage=replay_storage,
-        replay_streaming_storage=replay_streaming_storage,
+        replay_dataset=replay_dataset_selector,
+        replay_storage=replay_storage_selector,
+        replay_streaming_storage=replay_streaming_storage_selector,
         cloud_run=cloud_run,
-        transcode_to_hls=config.replay_uploader.transcode_to_hls,
+        transcode_to_hls=config.replay_recorder.transcode_to_hls,
     )
 
     screen_customizer = providers.Factory(
@@ -187,7 +208,7 @@ class Container(containers.DeclarativeContainer):
         klass_path="screen_customizer.ScreenCustomizer",
         logger=logger,
         game_window_helper=game_window_helper,
-        exit_to_desktop=config.replay_uploader.exit_to_desktop,
+        exit_to_desktop=config.replay_recorder.exit_to_desktop,
     )
 
     replay_viewer_helper = providers.Factory(

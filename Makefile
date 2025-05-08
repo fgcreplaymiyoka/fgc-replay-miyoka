@@ -20,7 +20,7 @@ clean:
 	docker rmi $(IMAGE_NAME_ANALYZER)
 
 upload_replay:
-	poetry run python miyoka/replay-uploader.py
+	poetry run python miyoka/replay-recorder.py
 
 screenshot:
 	poetry run python miyoka/libs/screenshot.py

@@ -21,7 +21,7 @@ if ($LastExitCode -ne 0) {
     exit
 }
 
-poetry run python miyoka/replay-uploader.py
+poetry run python miyoka/replay-recorder.py
 
 if ($LastExitCode -ne 0) {
     Write-Host "Failed to record replay. LastExitCode: $LastExitCode. Exiting..."

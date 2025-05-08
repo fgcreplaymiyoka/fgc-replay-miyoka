@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
-__all__ = ["ReplayUploader"]
+__all__ = ["ReplayRecorder"]
 
 
-class ReplayUploader(ABC):
+class ReplayRecorder(ABC):
     @abstractmethod
     def run(self): ...
