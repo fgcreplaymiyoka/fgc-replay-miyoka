@@ -26,6 +26,15 @@ original_language: $original_language
 (Get-Content ./config.yaml).Replace('<game.window.width>', "$game_window_width") | Set-Content ./config.yaml
 (Get-Content ./config.yaml).Replace('<game.extra>', "$game_extra") | Set-Content ./config.yaml
 
+$setup_gcp = Read-Host "Do you want to set up Google Cloud? (yes/no)"
+if ($setup_gcp -ne "yes") {
+    Write-Host "Google Cloud setup skipped. Exiting script."
+    (Get-Content ./config.yaml).Replace('<replay_recorder.save_to>', "local_file_storage") | Set-Content ./config.yaml
+    exit
+}
+
+(Get-Content ./config.yaml).Replace('<replay_recorder.save_to>', "google_cloud_storage") | Set-Content ./config.yaml
+
 $google_cloud_platform_project_id = Read-Host "Enter your [GCP project ID](https://github.com/fgcreplaymiyoka/fgc-replay-miyoka/blob/main/docs/getting_started.md)"
 $google_cloud_platform_region = Read-Host "Enter your [GCP region](https://cloud.google.com/compute/docs/regions-zones). Example: asia-northeast1"
 $randomString = -join ((65..90) + (97..122) | Get-Random -Count 8 | ForEach-Object {[char]$_})

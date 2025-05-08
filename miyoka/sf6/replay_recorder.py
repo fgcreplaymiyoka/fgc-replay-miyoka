@@ -6,6 +6,7 @@ import pydirectinput
 import subprocess
 import re
 import copy
+import shutil
 from typing import Optional
 from dependency_injector.providers import Factory
 from datetime import datetime, timezone
@@ -14,7 +15,7 @@ from miyoka.libs.replay_analyzer import ReplayAnalyzer
 from miyoka.libs.cloud_run import CloudRun
 from miyoka.libs.storages import ReplayStorage, ReplayStreamingStorage
 from miyoka.libs.bigquery import ReplayDataset
-from miyoka.libs.replay_uploader import ReplayUploader as ReplayUploaderBase
+from miyoka.libs.replay_recorder import ReplayRecorder as ReplayRecorderBase
 from miyoka.libs.game_window_helper import WIDTH_1280, HEIGHT_720
 from miyoka.sf6.game_window_helper import (
     GameWindowHelper,
@@ -25,28 +26,31 @@ from miyoka.sf6.constants import (
 )
 import traceback
 import threading
+import pathlib
 
 pydirectinput.FAILSAFE = False
 
-__all__ = ["ReplayUploader"]
+__all__ = ["ReplayRecorder"]
 
 
-class ReplayUploader(ReplayUploaderBase):
+class ReplayRecorder(ReplayRecorderBase):
     def __init__(
         self,
         logger: Logger,
         game_window_helper: GameWindowHelper,
-        replay_search_players: list[dict[str, str]],
-        replay_search_replay_id: str,
         analyzer_operation_mode: bool,
         replay_analyzer_factory: Factory[ReplayAnalyzer],
         replay_dataset: ReplayDataset,
         replay_storage: ReplayStorage,
         replay_streaming_storage: ReplayStreamingStorage,
         cloud_run: CloudRun,
+        replay_search_players: Optional[list[dict[str, str]]] = None,
+        replay_search_replay_ids: Optional[list[str]] = None,
         max_replays_per_run: Optional[int] = None,
         stop_after_duplicate_replays: Optional[int] = None,
         skip_recording: Optional[bool] = None,
+        save_to: Optional[str] = None,
+        separate_round: Optional[bool] = None,
         transcode_to_hls: Optional[bool] = None,
     ):
         super().__init__()
@@ -54,7 +58,7 @@ class ReplayUploader(ReplayUploaderBase):
         self.logger = logger
         self.game_window_helper = game_window_helper
         self.replay_search_players = replay_search_players
-        self.replay_search_replay_id = replay_search_replay_id
+        self.replay_search_replay_ids = replay_search_replay_ids
         self.analyzer_operation_mode = analyzer_operation_mode
         self.replay_analyzer_factory = replay_analyzer_factory
         self.replay_dataset = replay_dataset
@@ -64,10 +68,14 @@ class ReplayUploader(ReplayUploaderBase):
         self.max_replays_per_run = max_replays_per_run
         self.stop_after_duplicate_replays = stop_after_duplicate_replays
         self.skip_recording = skip_recording
+        self.save_to = save_to
+        self.separate_round = separate_round
         self.transcode_to_hls = transcode_to_hls
 
         self.current_replay_id = None
         self.current_metadata = None
+        self.replay_search_user_code = None
+        self.replay_search_replay_id = None
         self.replay_rewind_count = 5
         self.in_replay = False
         self.is_recording = False
@@ -97,13 +105,77 @@ class ReplayUploader(ReplayUploaderBase):
 
     def run(self):
         try:
-            for replay_search_player in self.replay_search_players:
-                self.replay_search_user_code = str(replay_search_player["id"])
-                self._run()
-                self._exit_from_replay()
+            if self.replay_search_replay_ids is not None:
+                for replay_search_replay_id in self.replay_search_replay_ids:
+                    self.replay_search_replay_id = replay_search_replay_id
+                    self._run()
+                    self._exit_from_replay()
+            elif self.replay_search_players is not None:
+                for replay_search_player in self.replay_search_players:
+                    self.replay_search_user_code = str(replay_search_player["id"])
+                    self._run()
+                    self._exit_from_replay()
         except Exception as e:
             self.logger.error(f"Error: {e} traceback: {traceback.format_exc()}")
             raise e
+
+    def _start_recording(self):
+        self.is_recording = True
+
+        ret = subprocess.run(
+            ["obs-cmd-windows-amd64.exe", "recording", "start"]
+        )
+        self.logger.info(
+            f"obs-cmd-windows-amd64.exe recording start: ret: {ret}"
+        )
+
+    def _stop_recording(self):
+        self.is_recording = False
+
+        ret = subprocess.run(
+            ["obs-cmd-windows-amd64.exe", "recording", "stop"],
+            capture_output=True,
+            text=True,
+        )
+        recording_path_search = re.search(
+            'Result: Ok\("(.*)"\)', ret.stdout
+        )
+
+        try:
+            recording_path = recording_path_search.group(1)
+        except Exception as ex:
+            self.logger.error(
+                f"Recoding might not have started yet: ret.stdout: {ret.stdout} ex: {ex}"
+            )
+            self.is_recording = False
+            return
+
+        self.save_replay(recording_path)
+
+    def _process_separate_round_in_replay(self, frame):
+        is_replay_options_in_round_exist = (
+            self.game_window_helper.is_replay_options_in_round_exist(frame)
+        )
+
+        if is_replay_options_in_round_exist and not self.is_recording:
+            pydirectinput.press("r")  # Pause
+            for _ in range(self.replay_rewind_count):
+                pydirectinput.press(
+                    "z"
+                )  # Previous Scene - Rolling back to the beginning of the game.
+
+            # Start recording
+            self._start_recording()
+
+            time.sleep(1.0)
+
+            pydirectinput.press("r")  # Resume
+
+        if not is_replay_options_in_round_exist and self.is_recording:
+            # Stop recording
+            self._stop_recording()
+
+            self.round += 1
 
     def _run(self):
         g_repeat_mode = False
@@ -111,64 +183,8 @@ class ReplayUploader(ReplayUploaderBase):
         while True:
             frame = self.game_window_helper.grab_frame()
 
-            if self.in_replay:
-                is_replay_options_in_round_exist = (
-                    self.game_window_helper.is_replay_options_in_round_exist(frame)
-                )
-
-                if is_replay_options_in_round_exist and not self.is_recording:
-                    self.is_recording = True
-
-                    pydirectinput.press("r")  # Pause
-                    for _ in range(self.replay_rewind_count):
-                        pydirectinput.press(
-                            "z"
-                        )  # Previous Scene - Rolling back to the beginning of the game.
-
-                    # Start recording
-                    ret = subprocess.run(
-                        ["obs-cmd-windows-amd64.exe", "recording", "start"]
-                    )
-                    self.logger.info(
-                        f"obs-cmd-windows-amd64.exe recording start: ret: {ret}"
-                    )
-
-                    time.sleep(1.0)
-
-                    pydirectinput.press("r")  # Resume
-
-                if not is_replay_options_in_round_exist and self.is_recording:
-                    # Stop recording
-                    ret = subprocess.run(
-                        ["obs-cmd-windows-amd64.exe", "recording", "stop"],
-                        capture_output=True,
-                        text=True,
-                    )
-                    # Upload to GCS
-                    recording_path_search = re.search(
-                        'Result: Ok\("(.*)"\)', ret.stdout
-                    )
-
-                    try:
-                        recording_path = recording_path_search.group(1)
-                    except Exception as ex:
-                        self.logger.error(
-                            f"Recoding might not have started yet: ret.stdout: {ret.stdout} ex: {ex}"
-                        )
-                        self.is_recording = False
-                        continue
-
-                    threading.Thread(
-                        target=self.upload_replay,
-                        kwargs={
-                            "recording_path": recording_path,
-                            "replay_id": self.current_replay_id,
-                            "round_id": self.round,
-                            "transcode_to_hls": self.transcode_to_hls,
-                        },
-                    ).start()
-                    self.is_recording = False
-                    self.round += 1
+            if self.separate_round and self.in_replay:
+                self._process_separate_round_in_replay(frame)
 
             screen = self.game_window_helper.identify_screen(frame)
 
@@ -208,6 +224,11 @@ class ReplayUploader(ReplayUploaderBase):
                         pydirectinput.press("f")  # Enter
                     else:
                         pydirectinput.press("s")  # Down in submenu
+                case "KeywordSearchByReplayId":
+                    if self.replay_search_replay_id:
+                        pydirectinput.press("f")  # Enter
+                    else:
+                        pydirectinput.press("s")  # Down in submenu
                 case "DialogUserCode":
                     pydirectinput.press("f")  # Enter the text box
                     time.sleep(2)
@@ -218,7 +239,23 @@ class ReplayUploader(ReplayUploaderBase):
                     pydirectinput.press("Enter")  # Exit the focus from the text box
                     pydirectinput.press("s")  # Down
                     pydirectinput.press("f")  # Enter - Start searching
+                case "DialogReplayId":
+                    pydirectinput.press("f")  # Enter the text box
+                    time.sleep(2)
+                    self.logger.info(
+                        f"Setting replay ID {self.replay_search_replay_id}"
+                    )
+                    pydirectinput.write(self.replay_search_replay_id.lower())
+                    pydirectinput.press("Enter")  # Exit the focus from the text box
+                    pydirectinput.press("s")  # Down
+                    pydirectinput.press("f")  # Enter - Start searching
                 case "SearchResults":
+                    if self.replay_search_replay_id and self.replay_done:
+                        self.logger.info(
+                            f"Recorded {self.replay_search_replay_id} replay. Stopping."
+                        )
+                        return
+
                     if self.replay_done:
                         time.sleep(2)
                         pydirectinput.press("s")  # Down - Select the next replay
@@ -238,33 +275,48 @@ class ReplayUploader(ReplayUploaderBase):
                         )
                         return
 
-                    success = self.extract_replay_summary(frame)
+                    self.extract_replay_id(frame)
 
-                    if not success or self.skip_recording:
+                    if self.is_replay_exist() or self.skip_recording:
+                        self.duplicate_replay_count += 1
                         pydirectinput.press("ESC")  # Exit
                         self.replay_done = True
                         continue
 
+                    if self.save_to == "google_cloud_storage":
+                        self.extract_replay_summary(frame)
+
                     pydirectinput.press("f")  # Enter - Start watching replay
 
-                    # For showing reply menu and skipping opening
-                    g_repeat_mode = True
                     self.in_replay = True
-                    self.is_recording = False
                     self.round = 1
                     self.recorded_replay_count += 1
+
+                    if self.separate_round:
+                        # For showing reply menu and skipping opening
+                        g_repeat_mode = True
+                        self.is_recording = False
+                    else:
+                        time.sleep(2.0)
+                        # Start recording
+                        self._start_recording()
                 case "ReplayEndDiaglogPlayAgain":
+                    if not self.separate_round:
+                        # Stop recording
+                        self._stop_recording()
+
                     self.in_replay = False
                     g_repeat_mode = False
                     self.replay_done = True
 
-                    threading.Thread(
-                        target=self.insert_replay_dataset,
-                        kwargs={
-                            "replay_id": self.current_replay_id,
-                            "metadata": copy.deepcopy(self.current_metadata),
-                        },
-                    ).start()
+                    if self.save_to == "google_cloud_storage":
+                        threading.Thread(
+                            target=self.insert_replay_dataset,
+                            kwargs={
+                                "replay_id": self.current_replay_id,
+                                "metadata": copy.deepcopy(self.current_metadata),
+                            },
+                        ).start()
 
                     if self.analyzer_operation_mode == "schedule":
                         # Analyze asynchronously so the uploading iteration is not blocked.
@@ -310,17 +362,31 @@ class ReplayUploader(ReplayUploaderBase):
             if g_repeat_mode:
                 pydirectinput.press("g")
 
-    def extract_replay_summary(self, frame) -> bool:
+    def extract_replay_id(self, frame):
+        if self.replay_search_replay_id:
+            self.current_replay_id = self.replay_search_replay_id
+            return
+
         current_replay_id = self.game_window_helper.identify_replay_id(frame)
         self.logger.info(f"Current Replay ID: {current_replay_id}")
 
         self.current_replay_id = current_replay_id
 
-        if self.replay_dataset.is_exists(current_replay_id):
-            self.logger.warn(f"Replay {current_replay_id} already exists")
-            self.duplicate_replay_count += 1
-            return False
+    def is_replay_exist(self) -> bool:
+        if self.save_to == "google_cloud_storage":
+            if self.replay_dataset.is_exists(self.current_replay_id):
+                self.logger.warn(f"Replay {current_replay_id} already exists")
+                return True
+        elif self.save_to == "local_file_storage":
+            filename = self._local_replay_file_name()
 
+            if os.path.exists(os.path.join(self._local_replay_dir(), filename)):
+                self.logger.warn(f"Replay {filename} already exists")
+                return True
+            
+        return False
+
+    def extract_replay_summary(self, frame):
         played_at = self.game_window_helper.identify_played_at(frame)
         p1_wins = self.game_window_helper.identify_result(frame, player="p1")
         p2_wins = self.game_window_helper.identify_result(frame, player="p2")
@@ -393,8 +459,6 @@ class ReplayUploader(ReplayUploaderBase):
         current_metadata["played_at"] = played_at.strftime("%Y-%m-%d %H:%M:%S")
         self.current_metadata = current_metadata
 
-        return True
-
     def insert_replay_dataset(
         self,
         replay_id: str,
@@ -425,6 +489,49 @@ class ReplayUploader(ReplayUploaderBase):
                 self.replay_storage.bucket_name, replay_id, round_id
             )
 
+    def save_replay_locally(
+        self,
+        recording_path: str,
+        replay_dir: str,
+        filename: int,
+    ):
+        time.sleep(5) # OBS might still be processing the video.
+        pathlib.Path(replay_dir).mkdir(exist_ok=True)
+        shutil.move(recording_path, f"{replay_dir}/{filename}")
+
+    def save_replay(self, recording_path: str):
+        if self.save_to == "google_cloud_storage":
+            # Upload to GCS
+            threading.Thread(
+                target=self.upload_replay,
+                kwargs={
+                    "recording_path": recording_path,
+                    "replay_id": self.current_replay_id,
+                    "round_id": self.round,
+                    "transcode_to_hls": self.transcode_to_hls,
+                },
+            ).start()
+        elif self.save_to  == "local_file_storage":
+            # Save to local file storage
+            threading.Thread(
+                target=self.save_replay_locally,
+                kwargs={
+                    "recording_path": recording_path,
+                    "replay_dir": self._local_replay_dir(),
+                    "filename": self._local_replay_file_name(),
+                },
+            ).start()
+
+
+    def _local_replay_dir(self):
+        return os.path.join(os.getcwd(), "replays")
+    
+    def _local_replay_file_name(self):
+        if self.separate_round:
+            return f"{self.current_replay_id}_{self.round}.mp4"
+        else:
+            return f"{self.current_replay_id}.mp4"
+
     def _exit_from_replay(self):
         # Back to the top screen
         pydirectinput.press("ESC")
@@ -432,6 +539,7 @@ class ReplayUploader(ReplayUploaderBase):
         pydirectinput.press("ESC")
         self.recorded_replay_count = 0
         self.duplicate_replay_count = 0
+        self.replay_done = False
 
     def identify_rank_from_mr(self, mr):
         if mr is None:

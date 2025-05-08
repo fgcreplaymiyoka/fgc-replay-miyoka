@@ -1,13 +1,13 @@
-from miyoka.libs.replay_uploader import ReplayUploader
+from miyoka.libs.replay_recorder import ReplayRecorder
 from miyoka.container import Container
 from dependency_injector.wiring import inject, Provide
 
 
 @inject
 def run(
-    replay_uploader: ReplayUploader = Provide[Container.replay_uploader],
+    replay_recorder: ReplayRecorder = Provide[Container.replay_recorder],
 ):
-    replay_uploader.run()
+    replay_recorder.run()
 
 
 if __name__ == "__main__":

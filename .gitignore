@@ -20,7 +20,7 @@ metadata-*.json
 model-store
 miyoka/model/*.mar
 miyoka/model/*.zip
-replay_uploader_save_data.json
+replay_recorder_save_data.json
 scenes
 scenes_by_similarity
 frame_dataset.pkl
@@ -48,3 +48,4 @@ eggs/
 .eggs/
 *.egg-info/
 *.egg
+replays/

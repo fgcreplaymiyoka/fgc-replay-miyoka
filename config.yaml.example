@@ -15,6 +15,11 @@ game:
     - name: <required>
       id: <required>
       pattern: <required>
+  # Alternatively, you can specify Replay IDs to be recorded.
+  # In this case, `players` above will be ignored.
+  # replay_ids:
+  #  - ABCDXQPDH
+  #  - CBADXQPDH
   extra:
     <game.extra>
 # Google Cloud Platform (GCP)
@@ -92,7 +97,7 @@ gcp:
       # (Optional) Name of the Cloud Run Job for Replay Analyzer.
       # When `analyzer_operation_mode=schedule`, you create an analyze job on Cloud Run.
       name:
-replay_uploader:
+replay_recorder:
   # "schedule" ... Schedule analyze job in Cloud Run. You must deploy analyzer in Cloud Run Job beforehand.
   # "inline" ... Execute analyzer in the replay uploader.
   # "skip" ... Skip analyzer execution.
@@ -103,6 +108,12 @@ replay_uploader:
   stop_after_duplicate_replays: 3
   # If true, skip recording the replay. This is useful to extract only replay summaries.
   skip_recording: false
+  # Where the recorded replay to be saved at
+  # `google_cloud_storage` ... Save to google cloud storage.
+  # `local_file_storage` ... Save to local file storage.
+  save_to: <replay_recorder.save_to>
+  # If true, each round is recorded separately. e.g. If a match had three rounds, there will be three videos.
+  separate_round: false
   # If true, exit the game when replay upload is done.
   exit_to_desktop: true
   # If true, requests Transcoder API to convert the mp4 video to HLS.
